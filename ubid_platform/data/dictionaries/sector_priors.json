@@ -1,0 +1,45 @@
+{
+  "_comment": "Sector priors for activity engine. seasonal=true widens Dormant band and slows Closed transition.",
+  "sectors": {
+    "wedding_hall": {
+      "seasonal": true,
+      "active_months": [1, 2, 5, 6, 11, 12],
+      "dormant_multiplier": 2.0,
+      "closed_delay_days": 180,
+      "nic_codes": ["96990", "55201"],
+      "keywords": ["wedding", "kalyana mantapa", "marriage hall", "function hall", "banquet"]
+    },
+    "fireworks": {
+      "seasonal": true,
+      "active_months": [10, 11],
+      "dormant_multiplier": 3.0,
+      "closed_delay_days": 365,
+      "nic_codes": ["24294"],
+      "keywords": ["fireworks", "crackers", "diwali", "pyrotechnics"]
+    },
+    "agricultural_processing": {
+      "seasonal": true,
+      "active_months": [10, 11, 12, 1, 2],
+      "dormant_multiplier": 2.0,
+      "closed_delay_days": 270,
+      "nic_codes": ["10101", "10102", "10106", "10120"],
+      "keywords": ["rice mill", "flour mill", "oil mill", "sugar", "jaggery", "agro", "groundnut"]
+    },
+    "construction": {
+      "seasonal": false,
+      "closed_delay_days": 365,
+      "nic_codes": ["41", "42", "43"],
+      "keywords": ["construction", "builder", "contractor", "civil works", "infrastructure"]
+    },
+    "textile": {
+      "seasonal": false,
+      "nic_codes": ["13", "14"],
+      "keywords": ["textile", "garment", "apparel", "fabric", "weaving", "spinning"]
+    }
+  },
+  "defaults": {
+    "seasonal": false,
+    "dormant_multiplier": 1.0,
+    "closed_delay_days": 90
+  }
+}

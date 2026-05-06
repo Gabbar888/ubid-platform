@@ -1,0 +1,62 @@
+# Web framework
+fastapi==0.115.5
+uvicorn[standard]==0.32.0
+python-multipart==0.0.12
+
+# Data validation
+pydantic==2.9.2
+pydantic-settings==2.6.1
+
+# Database - PostgreSQL
+sqlalchemy==2.0.36
+psycopg2-binary==2.9.10
+alembic==1.14.0
+
+# Database - Redis
+redis==5.2.0
+
+# Database - DuckDB (event warehouse)
+duckdb==1.1.3
+
+# Search / blocking - OpenSearch
+opensearch-py==2.7.1
+
+# Graph - Neo4j
+neo4j==5.27.0
+
+# Kafka
+confluent-kafka==2.6.0
+
+# ML - scoring
+lightgbm==4.5.0
+scikit-learn==1.5.2
+shap==0.46.0
+numpy==1.26.4
+pandas==2.2.3
+joblib==1.4.2
+
+# String matching
+rapidfuzz==3.10.0
+
+# Transliteration (Kannada <-> Roman)
+indic-transliteration==2.3.69
+
+# Graph algorithms (clustering)
+networkx==3.4.2
+
+# Utilities
+python-dotenv==1.0.1
+tqdm==4.66.6
+click==8.1.7
+httpx==0.27.2
+tenacity==9.0.0
+
+# Reviewer UI
+streamlit==1.39.0
+plotly==5.24.1
+
+# Dev / test
+pytest==8.3.3
+pytest-cov==6.0.0
+pytest-asyncio==0.24.0
+httpx==0.27.2

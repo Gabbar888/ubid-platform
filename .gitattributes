@@ -1,0 +1,17 @@
+# Force LF line endings for all text files (cross-platform safe)
+* text=auto eol=lf
+
+# Explicitly LF for code and config
+*.py eol=lf
+*.yml eol=lf
+*.yaml eol=lf
+*.json eol=lf
+*.jsonl eol=lf
+*.toml eol=lf
+*.md eol=lf
+*.txt eol=lf
+*.sql eol=lf
+*.sh eol=lf
+*.csv eol=lf
+Dockerfile eol=lf
+.env* eol=lf

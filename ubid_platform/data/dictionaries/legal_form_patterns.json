@@ -1,0 +1,25 @@
+{
+  "strip_suffixes": [
+    "private limited", "pvt limited", "pvt ltd", "private ltd",
+    "public limited", "pub limited", "pub ltd",
+    "limited liability partnership", "llp",
+    "limited", "ltd",
+    "& sons", "& co", "& company", "and sons", "and co", "and company",
+    "enterprises", "enterprise",
+    "industries", "industry",
+    "traders", "trading", "trade",
+    "m/s", "m/S", "messrs",
+    "the",
+    "company", "co"
+  ],
+  "legal_form_keywords": {
+    "pvt_ltd": ["pvt ltd", "pvt. ltd", "private limited", "pvt limited", "p. ltd", "p ltd"],
+    "public_ltd": ["public limited", "pub ltd", "(public)", "public ltd"],
+    "llp": ["llp", "limited liability partnership", "l.l.p"],
+    "partnership": ["& sons", "& co", "partnership firm", "general partnership"],
+    "proprietorship": ["proprietorship", "proprietor", "sole proprietor", "prop", "m/s"],
+    "huf": ["huf", "hindu undivided family"],
+    "trust": ["trust", "charitable trust", "foundation"],
+    "cooperative": ["cooperative", "co-operative", "coop", "co-op society"]
+  }
+}
