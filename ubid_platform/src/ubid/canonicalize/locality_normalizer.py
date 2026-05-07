@@ -8,8 +8,9 @@ from typing import Optional
 from rapidfuzz import fuzz, process
 
 _DICT_DIR = Path(__file__).parent.parent.parent.parent / "data" / "dictionaries"
+_DICT_PATH = _DICT_DIR / "locality_synonyms.json"
 
-with open(_DICT_DIR / "locality_synonyms.json", encoding="utf-8") as f:
+with open(_DICT_PATH, encoding="utf-8") as f:
     _RAW_SYNONYMS: dict[str, list[str]] = json.load(f)
 
 # Build forward map: variant → canonical
@@ -61,8 +62,9 @@ def normalize(raw: Optional[str]) -> Optional[str]:
     return None
 
 
-def add_synonym(variant: str, canonical: str):
-    """Runtime update from reviewer feedback (persisted elsewhere)."""
+def add_synonym(variant: str, canonical: str, persist: bool = True):
+    """Add a runtime synonym mapping. By default persists to the dictionary
+    JSON so the entry survives container restarts."""
     key = _clean(variant)
     _SYNONYM_MAP[key] = canonical
     if canonical not in _RAW_SYNONYMS:
@@ -71,3 +73,18 @@ def add_synonym(variant: str, canonical: str):
         _RAW_SYNONYMS[canonical].append(variant)
     if canonical not in _CANONICAL_KEYS:
         _CANONICAL_KEYS.append(canonical)
+
+    if persist:
+        try:
+            _DICT_PATH.write_text(
+                json.dumps(_RAW_SYNONYMS, indent=2, ensure_ascii=False),
+                encoding="utf-8",
+            )
+        except OSError:
+            # Dictionary file may be read-only inside container — non-fatal.
+            pass
+
+
+def list_synonyms() -> dict[str, list[str]]:
+    """Return the current canonical → variants mapping."""
+    return {k: list(v) for k, v in _RAW_SYNONYMS.items()}

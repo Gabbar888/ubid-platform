@@ -72,16 +72,33 @@ def enqueue_pair(pair_id: str, calibrated_probability: float, feature_vector: di
         db.add(item)
 
 
-def get_pending_items(limit: int = 20, reviewer_id: Optional[str] = None) -> list[dict]:
-    """Fetch top-priority pending review items with full pair context."""
+def get_pending_items(
+    limit: int = 20,
+    reviewer_id: Optional[str] = None,
+    reviewer_tier: str = "junior",
+) -> list[dict]:
+    """Fetch top-priority pending review items with full pair context.
+
+    Senior reviewers see deferred-by-junior items first (their priority was
+    boosted +0.3 on defer). Both tiers also see normal pending items in
+    descending priority.
+    """
     with get_db() as db:
-        rows = db.execute(
+        q = (
             select(ReviewerQueueORM, LinkagePairORM)
             .join(LinkagePairORM, ReviewerQueueORM.pair_id == LinkagePairORM.pair_id)
             .where(ReviewerQueueORM.status == "pending")
-            .order_by(ReviewerQueueORM.priority_score.desc())
-            .limit(limit)
-        ).all()
+        )
+        # Senior reviewers prefer escalated (priority > 0.85) items first
+        if reviewer_tier == "senior":
+            q = q.order_by(
+                ReviewerQueueORM.priority_score.desc(),
+                ReviewerQueueORM.updated_at.desc(),
+            )
+        else:
+            q = q.order_by(ReviewerQueueORM.priority_score.desc())
+
+        rows = db.execute(q.limit(limit)).all()
 
         result = []
         for q, p in rows:

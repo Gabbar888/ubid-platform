@@ -15,6 +15,7 @@ from ubid.ingest.fbis_adapter import FBISAdapter
 from ubid.ingest.kspcb_adapter import KSPCBAdapter
 from ubid.ingest.bescom_adapter import BESCOMAdapter
 from ubid.blocking.opensearch_blocker import bulk_index, find_candidates
+from ubid.clustering.union_find import UnionFind
 from ubid.scoring.lgbm_scorer import get_scorer
 from ubid.review.queue import enqueue_pair
 from ubid.graph import neo4j_graph
@@ -89,6 +90,7 @@ def ingest_records(source: SourceSystem, body: IngestRequest):
     auto_linked = 0
     review_queued = 0
     pairs_to_enqueue: list[tuple[str, float, dict]] = []
+    auto_link_pairs: list[tuple[str, str]] = []  # for inline clustering
 
     # Collect all pairs first, then commit once — avoids autoflush FK violations
     new_pairs: list[LinkagePairORM] = []
@@ -150,6 +152,7 @@ def ingest_records(source: SourceSystem, body: IngestRequest):
                 )
                 if is_auto:
                     auto_linked += 1
+                    auto_link_pairs.append((a_id, b_id))
                 else:
                     pairs_to_enqueue.append((pair_id, sp.calibrated_probability, sp.feature_vector))
                     review_queued += 1
@@ -158,49 +161,124 @@ def ingest_records(source: SourceSystem, body: IngestRequest):
     for pid, prob, fv in pairs_to_enqueue:
         enqueue_pair(pid, prob, fv)
 
-    # ── Step 4: Assign new UBIDs for records not yet linked ───────────────────
+    # ── Step 4: Cluster the batch and assign UBIDs ────────────────────────────
+    # Build a union-find over (a) every record in this batch, (b) every
+    # auto-linked pair we just produced, (c) any historical auto-linked pair
+    # that touches a canonical_id we've already pulled in, and (d) reviewer
+    # must-link constraints. Cannot-link constraints block specific unions.
+    # Each connected component gets one UBID (existing one if any member is
+    # already assigned, merging if multiple).
     new_ubids = 0
+    now = datetime.now(timezone.utc)
+    rec_by_canonical: dict[str, CanonicalRecord] = {r.canonical_id: r for r in persisted}
+
+    from sqlalchemy import text, bindparam  # noqa: E402
+
     with get_db() as db:
-        for rec in persisted:
-            ubid = redis_cache.get_ubid_for_source(rec.source_system, rec.source_record_id)
-            if ubid:
-                continue
+        # Pull cannot-link constraints up-front so we can respect them while
+        # building the union-find.
+        cannot_link: set[frozenset[str]] = set()
+        must_link_pairs: list[tuple[str, str]] = []
+        for ca, cb, ctype in db.execute(text("""
+            SELECT canonical_id_a, canonical_id_b, constraint_type FROM linkage_constraints
+        """)).fetchall():
+            if str(ctype).lower().startswith("cannot"):
+                cannot_link.add(frozenset([str(ca), str(cb)]))
+            else:
+                must_link_pairs.append((str(ca), str(cb)))
 
-            from sqlalchemy import text
-            row = db.execute(text("""
-                SELECT u.ubid FROM ubid_source_links usl
-                JOIN ubid_nodes u ON usl.ubid = u.ubid
-                WHERE usl.canonical_id = :cid LIMIT 1
-            """), {"cid": rec.canonical_id}).first()
+        uf = UnionFind()
+        for cid in rec_by_canonical:
+            uf.add(cid)
 
-            if not row:
-                new_ubid = str(uuid.uuid4())
+        def _safe_union(a: str, b: str) -> bool:
+            if frozenset([a, b]) in cannot_link:
+                return False
+            uf.union(a, b)
+            return True
+
+        for a, b in auto_link_pairs:
+            _safe_union(a, b)
+        for a, b in must_link_pairs:
+            _safe_union(a, b)
+
+        # Pull historical auto-link edges that touch nodes in our current graph
+        # so cross-batch components form correctly.
+        known_ids = list(uf.parent.keys())
+        if known_ids:
+            hist_rows = db.execute(text("""
+                SELECT canonical_id_a, canonical_id_b
+                FROM linkage_pairs
+                WHERE (canonical_id_a IN :ids OR canonical_id_b IN :ids)
+                  AND (calibrated_probability >= :t
+                       OR (deterministic_tier_fired AND deterministic_result = TRUE))
+            """).bindparams(bindparam("ids", expanding=True)),
+                {"ids": known_ids, "t": auto_thresh}
+            ).fetchall()
+            for ca, cb in hist_rows:
+                _safe_union(str(ca), str(cb))
+
+        # Process each connected component
+        for _, members in uf.components().items():
+            # What UBIDs (if any) already exist for these canonical_ids?
+            existing = db.execute(text("""
+                SELECT canonical_id, ubid FROM ubid_source_links
+                WHERE canonical_id IN :ids
+            """).bindparams(bindparam("ids", expanding=True)),
+                {"ids": members}
+            ).fetchall()
+            existing_links = {str(c): str(u) for c, u in existing}
+            existing_ubids = sorted(set(existing_links.values()))
+
+            if existing_ubids:
+                target_ubid = existing_ubids[0]
+                # Merge multiple UBIDs into the chosen one
+                for old in existing_ubids[1:]:
+                    db.execute(text("""
+                        UPDATE ubid_source_links SET ubid = :t WHERE ubid = :o
+                    """), {"t": target_ubid, "o": old})
+                    db.execute(text("DELETE FROM ubid_nodes WHERE ubid = :o"), {"o": old})
+                    redis_cache.invalidate_verdict(old)
+                redis_cache.invalidate_verdict(target_ubid)
+            else:
+                target_ubid = str(uuid.uuid4())
+                rep = next((rec_by_canonical[m] for m in members if m in rec_by_canonical), None)
                 db.add(UBIDNodeORM(
-                    ubid=new_ubid,
-                    pin_code=rec.pin_code,
-                    district=rec.district,
-                    sector_canonical=rec.nic_code or rec.sector_raw,
-                    created_at=datetime.now(timezone.utc),
-                    updated_at=datetime.now(timezone.utc),
+                    ubid=target_ubid,
+                    pin_code=rep.pin_code if rep else None,
+                    district=rep.district if rep else None,
+                    sector_canonical=(rep.nic_code or rep.sector_raw) if rep else None,
+                    created_at=now,
+                    updated_at=now,
                 ))
+                new_ubids += 1
+
+            # Link any members that aren't already linked to target_ubid
+            for cid in members:
+                if existing_links.get(cid) == target_ubid:
+                    continue
+                if cid in existing_links:
+                    # Already linked but to a now-merged UBID (handled by UPDATE above)
+                    continue
                 db.add(UBIDSourceLinkORM(
                     link_id=str(uuid.uuid4()),
-                    ubid=new_ubid,
-                    canonical_id=rec.canonical_id,
-                    linked_at=datetime.now(timezone.utc),
+                    ubid=target_ubid,
+                    canonical_id=cid,
+                    linked_at=now,
                     linked_by="auto",
                     confidence=1.0,
                 ))
-                redis_cache.set_ubid_for_source(rec.source_system, rec.source_record_id, new_ubid)
-                try:
-                    neo4j_graph.upsert_ubid(new_ubid, None, rec.pin_code, rec.district, rec.sector_raw)
-                    neo4j_graph.upsert_source_record(
-                        rec.canonical_id, new_ubid,
-                        rec.source_system, rec.source_record_id, rec.name_raw
-                    )
-                except Exception as e:
-                    logger.warning("Neo4j upsert failed (non-fatal): %s", e)
-                new_ubids += 1
+                rec = rec_by_canonical.get(cid)
+                if rec:
+                    redis_cache.set_ubid_for_source(rec.source_system, rec.source_record_id, target_ubid)
+                    try:
+                        neo4j_graph.upsert_ubid(target_ubid, None, rec.pin_code, rec.district, rec.sector_raw)
+                        neo4j_graph.upsert_source_record(
+                            rec.canonical_id, target_ubid,
+                            rec.source_system, rec.source_record_id, rec.name_raw
+                        )
+                    except Exception as e:
+                        logger.warning("Neo4j upsert failed (non-fatal): %s", e)
 
     return IngestResponse(
         accepted=len(persisted),

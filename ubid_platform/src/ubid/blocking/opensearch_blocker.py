@@ -124,8 +124,17 @@ def bulk_index(records: list[CanonicalRecord]):
     return success
 
 
-def find_candidates(record: CanonicalRecord, max_per_key: int = 100) -> list[str]:
-    """Return canonical_ids of candidate matches via union-blocking."""
+def find_candidates(record: CanonicalRecord, max_per_key: int = 200) -> list[str]:
+    """Return canonical_ids of candidate matches via union-blocking.
+
+    Union-of-keys: a record is a candidate if it shares any of:
+      • PAN equality
+      • legal_entity_pan (PAN extracted from GSTIN)
+      • pin_code + name-prefix-4 soundex (the workhorse)
+      • pin_code + door-number prefix
+      • phone equality
+      • trigram name-similarity (catches PAN-less BESCOM and cross-pin typos)
+    """
     client = get_client()
     settings = get_settings()
 
@@ -141,6 +150,20 @@ def find_candidates(record: CanonicalRecord, max_per_key: int = 100) -> list[str
         should_clauses.append({"term": {"blocking_pin_door": record.blocking_pin_door}})
     if record.phone:
         should_clauses.append({"term": {"phone": record.phone}})
+
+    # Trigram-similar name. Cheap fuzzy block, especially valuable when PAN is
+    # missing (e.g. BESCOM) or pin codes differ. minimum_should_match=60%
+    # keeps the candidate set small while still catching close variants like
+    # "Sharma Traders" vs "Sharma Trading Co".
+    if record.name_normalized and len(record.name_normalized) >= 4:
+        should_clauses.append({
+            "match": {
+                "name_normalized": {
+                    "query": record.name_normalized,
+                    "minimum_should_match": "60%",
+                }
+            }
+        })
 
     if not should_clauses:
         return []

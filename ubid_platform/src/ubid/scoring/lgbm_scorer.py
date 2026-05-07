@@ -58,7 +58,12 @@ class LightGBMScorer:
             except Exception as e:
                 logger.warning("Could not load scorer: %s — using heuristic fallback", e)
 
-    def score(self, a: CanonicalRecord, b: CanonicalRecord) -> ScoredPair:
+    def score(self, a: CanonicalRecord, b: CanonicalRecord, fast: bool = False) -> ScoredPair:
+        """Score a record pair.
+
+        fast=True skips SHAP attribution and OpenSearch shared-block lookup,
+        useful for batch evaluation where per-pair explainability is not needed.
+        """
         det = det_evaluate(a, b)
 
         if det.fired and det.is_match is not None:
@@ -80,14 +85,20 @@ class LightGBMScorer:
         prior = det.probability if (det.fired and det.probability > 0) else 0.5
 
         if self._trained:
-            raw, cal, shap = self._model_score(fv, prior)
+            raw, cal, shap = self._model_score(fv, prior, with_shap=not fast)
         else:
             raw = self._heuristic_score(fv)
             cal = _sigmoid_blend(raw, prior)
-            shap = {k: _HEURISTIC_WEIGHTS.get(k, 0.0) * v for k, v in fv.items() if v != feat_module.MISSING}
+            shap = {} if fast else {
+                k: _HEURISTIC_WEIGHTS.get(k, 0.0) * v
+                for k, v in fv.items() if v != feat_module.MISSING
+            }
 
-        from ubid.blocking.opensearch_blocker import which_blocks_shared
-        shared = which_blocks_shared(a, b)
+        if fast:
+            shared = []
+        else:
+            from ubid.blocking.opensearch_blocker import which_blocks_shared
+            shared = which_blocks_shared(a, b)
 
         return ScoredPair(
             canonical_id_a=a.canonical_id,
@@ -101,12 +112,14 @@ class LightGBMScorer:
             shared_blocks=shared,
         )
 
-    def _model_score(self, fv: dict, prior: float):
-        import shap as shap_lib
+    def _model_score(self, fv: dict, prior: float, with_shap: bool = True):
         X = np.array([feat_module.to_vector(fv)])
-        raw = float(self._model.predict(X, num_iteration=self._model.best_iteration)[0])
+        raw = float(self._model.predict_proba(X)[0, 1])
         cal = float(self._calibrator.predict([raw])[0])
+        if not with_shap:
+            return raw, cal, {}
         try:
+            import shap as shap_lib
             explainer = shap_lib.TreeExplainer(self._model)
             shap_vals = explainer.shap_values(X)
             if isinstance(shap_vals, list):

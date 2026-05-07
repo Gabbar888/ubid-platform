@@ -82,15 +82,34 @@ def append_event(
     ])
 
 
-def get_events_for_ubid(ubid: str, lookback_days: int = 730) -> list[dict]:
+def get_events_for_ubid(
+    ubid: str,
+    lookback_days: int = 730,
+    reference_date: Optional[date] = None,
+) -> list[dict]:
+    """Fetch events for a UBID within `lookback_days` of the reference date.
+
+    Reference date defaults to today; pass an explicit value to compute
+    decay against a fixed point in time (useful for demos / replay).
+    """
     conn = get_conn()
-    rows = conn.execute("""
-        SELECT event_id, source_system, event_type, event_date, metadata
-        FROM events
-        WHERE ubid = ?
-          AND event_date >= current_date - INTERVAL (?) DAY
-        ORDER BY event_date DESC
-    """, [ubid, lookback_days]).fetchall()
+    if reference_date is None:
+        rows = conn.execute("""
+            SELECT event_id, source_system, event_type, event_date, metadata
+            FROM events
+            WHERE ubid = ?
+              AND event_date >= current_date - INTERVAL (?) DAY
+            ORDER BY event_date DESC
+        """, [ubid, lookback_days]).fetchall()
+    else:
+        rows = conn.execute("""
+            SELECT event_id, source_system, event_type, event_date, metadata
+            FROM events
+            WHERE ubid = ?
+              AND event_date >= (CAST(? AS DATE) - INTERVAL (?) DAY)
+              AND event_date <= CAST(? AS DATE)
+            ORDER BY event_date DESC
+        """, [ubid, reference_date, lookback_days, reference_date]).fetchall()
     cols = ["event_id", "source_system", "event_type", "event_date", "metadata"]
     return [dict(zip(cols, r)) for r in rows]
 

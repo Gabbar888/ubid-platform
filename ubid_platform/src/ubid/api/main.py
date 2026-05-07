@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from ubid.api.routers import ingest, lookup, status, review, query
+from ubid.api.routers import ingest, lookup, status, review, query, events, admin
 from ubid.storage.postgres import create_all_tables
 from ubid.blocking.opensearch_blocker import ensure_index
 from ubid.storage.duckdb_warehouse import get_conn as get_duck
@@ -47,10 +47,12 @@ app.add_middleware(
 )
 
 app.include_router(ingest.router, prefix="/api/v1/ingest",  tags=["Ingest"])
+app.include_router(events.router, prefix="/api/v1/events",  tags=["Events"])
 app.include_router(lookup.router, prefix="/api/v1/lookup",  tags=["Lookup"])
 app.include_router(status.router, prefix="/api/v1/ubid",    tags=["UBID Status"])
 app.include_router(review.router, prefix="/api/v1/review",  tags=["Review"])
 app.include_router(query.router,  prefix="/api/v1/query",   tags=["Query"])
+app.include_router(admin.router,  prefix="/api/v1/admin",   tags=["Admin"])
 
 
 @app.get("/health", tags=["Health"])

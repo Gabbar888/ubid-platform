@@ -135,26 +135,126 @@ def _write_training_label(db, id_a: str, id_b: str, is_match: bool):
 
 
 def _trigger_relink(id_a: str, id_b: str):
-    """Invalidate cached UBIDs so next lookup triggers re-clustering."""
-    # In production this would publish a re-link event to Kafka
-    logger.info("Relink triggered for %s ↔ %s", id_a, id_b)
+    """Apply a must-link decision by merging the two records into one UBID.
+
+    If only one side has a UBID, the other gets attached to it. If both have
+    different UBIDs we merge them (lower-uuid wins as canonical, all source
+    links re-pointed). If neither has a UBID, mint one.
+    """
+    from sqlalchemy import text
+    from ubid.storage.postgres import (
+        get_db, UBIDNodeORM, UBIDSourceLinkORM, CanonicalRecordORM,
+    )
+
+    with get_db() as db:
+        rows = db.execute(text("""
+            SELECT canonical_id, ubid FROM ubid_source_links
+            WHERE canonical_id IN (:a, :b)
+        """), {"a": id_a, "b": id_b}).fetchall()
+        link_map = {str(c): str(u) for c, u in rows}
+
+        ubid_a = link_map.get(id_a)
+        ubid_b = link_map.get(id_b)
+        now = datetime.now(timezone.utc)
+
+        def _attach(canonical_id: str, target_ubid: str):
+            db.add(UBIDSourceLinkORM(
+                link_id=str(uuid.uuid4()),
+                ubid=target_ubid,
+                canonical_id=canonical_id,
+                linked_at=now,
+                linked_by="reviewer:must_link",
+                confidence=1.0,
+            ))
+            cr = db.get(CanonicalRecordORM, canonical_id)
+            if cr is not None:
+                redis_cache.set_ubid_for_source(cr.source_system, cr.source_record_id, target_ubid)
+
+        if ubid_a and ubid_b and ubid_a != ubid_b:
+            target = sorted([ubid_a, ubid_b])[0]
+            old = ubid_b if target == ubid_a else ubid_a
+            db.execute(text("UPDATE ubid_source_links SET ubid = :t WHERE ubid = :o"),
+                       {"t": target, "o": old})
+            db.execute(text("DELETE FROM activity_verdicts WHERE ubid = :o"), {"o": old})
+            db.execute(text("DELETE FROM ubid_nodes WHERE ubid = :o"), {"o": old})
+            redis_cache.invalidate_verdict(old)
+            redis_cache.invalidate_verdict(target)
+            # Refresh redis mapping for everything that was on the old UBID
+            for cid_row in db.execute(text("""
+                SELECT cr.source_system, cr.source_record_id
+                FROM canonical_records cr
+                JOIN ubid_source_links usl ON usl.canonical_id = cr.canonical_id
+                WHERE usl.ubid = :t
+            """), {"t": target}).fetchall():
+                redis_cache.set_ubid_for_source(cid_row[0], cid_row[1], target)
+            logger.info("Reviewer must-link merged UBID %s → %s", old, target)
+        elif ubid_a and not ubid_b:
+            _attach(id_b, ubid_a)
+            redis_cache.invalidate_verdict(ubid_a)
+        elif ubid_b and not ubid_a:
+            _attach(id_a, ubid_b)
+            redis_cache.invalidate_verdict(ubid_b)
+        elif not ubid_a and not ubid_b:
+            new_ubid = str(uuid.uuid4())
+            rep = db.get(CanonicalRecordORM, id_a)
+            db.add(UBIDNodeORM(
+                ubid=new_ubid,
+                pin_code=rep.pin_code if rep else None,
+                district=rep.district if rep else None,
+                sector_canonical=(rep.nic_code or rep.sector_raw) if rep else None,
+                created_at=now,
+                updated_at=now,
+            ))
+            db.flush()
+            _attach(id_a, new_ubid)
+            _attach(id_b, new_ubid)
 
 
 def _trigger_unlink_if_merged(db, id_a: str, id_b: str, reviewer_id: str):
-    """If these two are currently in the same UBID, split them."""
+    """Apply a cannot-link decision: if the two records currently share a
+    UBID, peel record B off into a fresh UBID and invalidate verdicts.
+    """
     from sqlalchemy import text
+    from ubid.storage.postgres import UBIDNodeORM, UBIDSourceLinkORM, CanonicalRecordORM
+
     row = db.execute(text("""
-        SELECT a_links.ubid as ubid_a, b_links.ubid as ubid_b
-        FROM ubid_source_links a_links, ubid_source_links b_links
+        SELECT a_links.ubid AS ubid
+        FROM ubid_source_links a_links
+        JOIN ubid_source_links b_links ON a_links.ubid = b_links.ubid
         WHERE a_links.canonical_id = :a AND b_links.canonical_id = :b
-          AND a_links.ubid = b_links.ubid
         LIMIT 1
     """), {"a": id_a, "b": id_b}).first()
 
-    if row:
-        logger.warning(
-            "Cannot-link decision on records currently sharing UBID %s — unmerge required",
-            row.ubid_a,
-        )
-        # Invalidate verdict cache for affected UBID
-        redis_cache.invalidate_verdict(str(row.ubid_a))
+    if not row:
+        return  # Already separate, nothing to do
+
+    shared_ubid = str(row.ubid)
+    now = datetime.now(timezone.utc)
+
+    # Peel id_b onto a brand-new UBID
+    new_ubid = str(uuid.uuid4())
+    rep = db.get(CanonicalRecordORM, id_b)
+    db.add(UBIDNodeORM(
+        ubid=new_ubid,
+        pin_code=rep.pin_code if rep else None,
+        district=rep.district if rep else None,
+        sector_canonical=(rep.nic_code or rep.sector_raw) if rep else None,
+        created_at=now,
+        updated_at=now,
+    ))
+    # Flush so the new UBID node satisfies the FK on ubid_source_links
+    db.flush()
+    db.execute(text("""
+        UPDATE ubid_source_links SET ubid = :n, linked_by = 'reviewer:cannot_link',
+                                       linked_at = :t
+        WHERE canonical_id = :b
+    """), {"n": new_ubid, "b": id_b, "t": now})
+
+    if rep is not None:
+        redis_cache.set_ubid_for_source(rep.source_system, rep.source_record_id, new_ubid)
+    redis_cache.invalidate_verdict(shared_ubid)
+    redis_cache.invalidate_verdict(new_ubid)
+    db.execute(text("DELETE FROM activity_verdicts WHERE ubid IN (:a, :b)"),
+               {"a": shared_ubid, "b": new_ubid})
+    logger.info("Reviewer cannot-link split UBID %s → %s peeled off (record %s)",
+                shared_ubid, new_ubid, id_b)
