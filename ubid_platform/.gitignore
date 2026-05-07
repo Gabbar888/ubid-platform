@@ -20,3 +20,16 @@ htmlcov/
 .mypy_cache/
 .ruff_cache/
 node_modules/
+
+# OSM extracts — too big for GitHub (>100 MB)
+# Operators download these themselves into nominatim_data/
+nominatim_data/*.pbf
+nominatim_data/*.osm
+nominatim_data/*.osm.bz2
+
+# Frontend logo assets — operator drops their own
+frontend/assets/*.png
+frontend/assets/*.jpg
+frontend/assets/*.jpeg
+frontend/assets/*.svg
+!frontend/assets/README.md

@@ -1,5 +1,8 @@
 # Nominatim data directory
 
+> **⚠️ The .pbf file is NOT committed to the repo** (~126 MB exceeds GitHub's
+> 100 MB per-file limit). Every operator downloads it themselves into this folder.
+
 Drop the Karnataka OpenStreetMap extract into this folder to enable
 self-hosted geocoding.
 
@@ -7,18 +10,33 @@ self-hosted geocoding.
 
 ### 1. Download the OSM extract
 
-Pick **one** of these from Geofabrik (free, no signup):
+Pick **either** mirror — both serve the same data, both are free, no signup required:
 
-| Extract | Size | Coverage | Best for |
-|---|---|---|---|
-| **`karnataka-latest.osm.pbf`** | ~250 MB | Karnataka only | ✅ Recommended for this platform |
-| `india-latest.osm.pbf` | ~5 GB | Whole India | If users span multiple states |
-| `southern-zone-latest.osm.pbf` | ~1.2 GB | KA + TN + KL + AP + TS + Pondy | If you also process neighbouring states |
+| Mirror | URL | Size |
+|---|---|---|
+| **OpenStreetMap France** ✅ recommended | [karnataka-latest.osm.pbf](https://download.openstreetmap.fr/extracts/asia/india/karnataka-latest.osm.pbf) | ~126 MB |
+| Geofabrik (alternative) | [karnataka-latest.osm.pbf](https://download.geofabrik.de/asia/india/karnataka-latest.osm.pbf) | ~126 MB |
 
-Download links:
-- Karnataka: <https://download.geofabrik.de/asia/india/karnataka.html>
-  → click **"karnataka-latest.osm.pbf"**
-- India:    <https://download.geofabrik.de/asia/india.html>
+Other available extracts (use only if you need wider coverage):
+
+| Extract | Size | Coverage |
+|---|---|---|
+| `india-latest.osm.pbf` | ~5 GB | Whole India — slower import |
+| `southern-zone-latest.osm.pbf` | ~1.2 GB | KA + TN + KL + AP + TS + Pondy |
+
+Quick download commands:
+
+```bash
+# Linux / macOS
+cd ubid_platform/nominatim_data
+curl -O https://download.openstreetmap.fr/extracts/asia/india/karnataka-latest.osm.pbf
+```
+
+```powershell
+# Windows PowerShell
+cd ubid_platform\nominatim_data
+Invoke-WebRequest -Uri "https://download.openstreetmap.fr/extracts/asia/india/karnataka-latest.osm.pbf" -OutFile "karnataka-latest.osm.pbf"
+```
 
 ### 2. Place the file here
 
