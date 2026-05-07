@@ -25,6 +25,9 @@ from ubid.scoring import features as feat_module
 from ubid.scoring.lgbm_scorer import get_scorer
 from ubid.storage.postgres import (
     CanonicalRecordORM,
+    LinkagePairORM,
+    ReviewerQueueORM,
+    RetrainRunORM,
     TrainingLabelORM,
     get_db,
 )
@@ -127,6 +130,9 @@ class RetrainRequest(BaseModel):
 
 @router.post("/retrain")
 def retrain_scorer(body: RetrainRequest):
+    import uuid as _uuid
+    from datetime import datetime, timezone
+
     reviewer_pairs = _load_reviewer_labelled_pairs()
     if len(reviewer_pairs) < body.min_reviewer_labels:
         raise HTTPException(
@@ -141,7 +147,10 @@ def retrain_scorer(body: RetrainRequest):
     if not pairs:
         raise HTTPException(400, "No labelled pairs to train on")
 
-    # Snapshot pre-train metrics on a held-out subset for A/B comparison
+    # Open a retrain-run row up front so we always log the attempt
+    run_id = str(_uuid.uuid4())
+    started_at = datetime.now(timezone.utc)
+
     pre_metrics = _evaluate_holdout(pairs)
 
     X, y = _featurise(pairs)
@@ -155,14 +164,223 @@ def retrain_scorer(body: RetrainRequest):
 
     post_metrics = _evaluate_holdout(pairs)
 
+    finished_at = datetime.now(timezone.utc)
+
+    # Persist a retrain-run row for history + label-budget tracking
+    try:
+        with get_db() as db:
+            db.add(RetrainRunORM(
+                run_id=run_id,
+                started_at=started_at,
+                finished_at=finished_at,
+                duration_seconds=round(duration, 3),
+                n_reviewer_labels=len(reviewer_pairs),
+                n_ground_truth_pairs=len(pairs) - len(reviewer_pairs),
+                n_total_pairs=len(pairs),
+                pre_brier=pre_metrics.get("brier"),
+                pre_ece=pre_metrics.get("ece"),
+                pre_f1=pre_metrics.get("f1"),
+                pre_precision=pre_metrics.get("precision"),
+                pre_recall=pre_metrics.get("recall"),
+                post_brier=post_metrics.get("brier"),
+                post_ece=post_metrics.get("ece"),
+                post_f1=post_metrics.get("f1"),
+                post_precision=post_metrics.get("precision"),
+                post_recall=post_metrics.get("recall"),
+                triggered_by="manual",
+                notes=None,
+            ))
+    except Exception as e:
+        logger.warning("Could not persist retrain-run row: %s", e)
+
     return {
         "status": "trained",
+        "run_id": run_id,
         "n_reviewer_labels": len(reviewer_pairs),
         "n_ground_truth_pairs": len(pairs) - len(reviewer_pairs),
         "n_total_pairs": len(pairs),
         "duration_seconds": round(duration, 2),
         "pre_train": pre_metrics,
         "post_train": post_metrics,
+    }
+
+
+@router.get("/retrain-history")
+def retrain_history(limit: int = 20):
+    """Return the most recent retrain runs with their before/after metrics.
+
+    Drives the Admin → Retrain history chart so users can see the model
+    improving (or regressing) over time.
+    """
+    from sqlalchemy import select, desc
+    with get_db() as db:
+        rows = db.execute(
+            select(RetrainRunORM)
+            .order_by(desc(RetrainRunORM.started_at))
+            .limit(limit)
+        ).scalars().all()
+
+    return {
+        "total": len(rows),
+        "runs": [
+            {
+                "run_id": str(r.run_id),
+                "started_at": str(r.started_at) if r.started_at else None,
+                "finished_at": str(r.finished_at) if r.finished_at else None,
+                "duration_seconds": r.duration_seconds,
+                "n_reviewer_labels": r.n_reviewer_labels,
+                "n_ground_truth_pairs": r.n_ground_truth_pairs,
+                "n_total_pairs": r.n_total_pairs,
+                "pre": {
+                    "f1": r.pre_f1, "brier": r.pre_brier, "ece": r.pre_ece,
+                    "precision": r.pre_precision, "recall": r.pre_recall,
+                },
+                "post": {
+                    "f1": r.post_f1, "brier": r.post_brier, "ece": r.post_ece,
+                    "precision": r.post_precision, "recall": r.post_recall,
+                },
+                "triggered_by": r.triggered_by,
+                "notes": r.notes,
+            }
+            for r in rows
+        ],
+    }
+
+
+@router.get("/labels-since-last-retrain")
+def labels_since_last_retrain():
+    """How many reviewer labels have accumulated since the last retrain.
+
+    Used by the Admin page to show a label-budget counter:
+      - 0 new labels   → retraining is pointless
+      - small budget   → retraining gives marginal gain
+      - large budget   → retraining will probably move metrics
+    """
+    from sqlalchemy import select, desc, func
+    with get_db() as db:
+        last = db.execute(
+            select(RetrainRunORM)
+            .order_by(desc(RetrainRunORM.started_at))
+            .limit(1)
+        ).scalar_one_or_none()
+
+        total_labels = db.execute(
+            select(func.count()).select_from(TrainingLabelORM)
+        ).scalar() or 0
+
+        if last is None:
+            return {
+                "last_retrain_at": None,
+                "total_labels": total_labels,
+                "labels_since_last_retrain": total_labels,
+                "recommendation": "first retrain — run whenever you have at least 50 labels",
+            }
+
+        new_count = db.execute(
+            select(func.count()).select_from(TrainingLabelORM)
+            .where(TrainingLabelORM.created_at > last.started_at)
+        ).scalar() or 0
+
+    if new_count == 0:
+        rec = "no new labels — retrain would not change anything"
+    elif new_count < 20:
+        rec = f"only {new_count} new labels — wait for more (≥50 recommended)"
+    elif new_count < 200:
+        rec = f"{new_count} new labels — retrain would refresh calibration"
+    else:
+        rec = f"{new_count} new labels — retrain strongly recommended"
+
+    return {
+        "last_retrain_at": str(last.started_at),
+        "last_retrain_run_id": str(last.run_id),
+        "total_labels": total_labels,
+        "labels_since_last_retrain": new_count,
+        "recommendation": rec,
+    }
+
+
+@router.post("/rescore")
+def rescore_pairs(mode: str = "smart"):
+    """Re-score linkage_pairs with the current model.
+
+    `mode=smart` (default): only re-score pairs that matter:
+      • all pairs in the review queue (so reviewers see fresh probabilities)
+      • boundary pairs in the calibrated_probability range [0.20, 0.97]
+        (their auto-link / review / reject bucket might change)
+    Skips pairs already firmly classified — they wouldn't move buckets
+    even if the model shifted.
+
+    `mode=full`: re-score every pair (slow at scale).
+    """
+    from datetime import datetime, timezone
+    from sqlalchemy import select
+    from ubid.api.routers.ingest import _orm_to_canonical
+    from ubid.scoring.lgbm_scorer import get_scorer
+
+    if mode not in ("smart", "full"):
+        raise HTTPException(400, "mode must be 'smart' or 'full'")
+
+    scorer = get_scorer()
+    if not scorer._trained:
+        raise HTTPException(409, "Scorer is not trained — run /admin/retrain first.")
+
+    t0 = time.time()
+    updated = 0
+    skipped = 0
+
+    with get_db() as db:
+        # Pull canonical records once into a dict for fast lookup
+        canon_by_id = {
+            str(c.canonical_id): _orm_to_canonical(c)
+            for c in db.execute(select(CanonicalRecordORM)).scalars()
+        }
+
+        if mode == "full":
+            pairs = list(db.execute(select(LinkagePairORM)).scalars())
+        else:
+            # Boundary pairs (the only ones whose bucket might change)
+            boundary_pairs = list(db.execute(
+                select(LinkagePairORM).where(
+                    LinkagePairORM.calibrated_probability >= 0.20,
+                    LinkagePairORM.calibrated_probability <= 0.97,
+                )
+            ).scalars())
+            # Pairs in the review queue
+            queue_pair_ids = set(str(q.pair_id) for q in db.execute(
+                select(ReviewerQueueORM).where(ReviewerQueueORM.status == "pending")
+            ).scalars())
+            queue_pairs = [p for p in db.execute(select(LinkagePairORM)).scalars()
+                           if str(p.pair_id) in queue_pair_ids]
+            seen = set()
+            pairs = []
+            for p in boundary_pairs + queue_pairs:
+                if str(p.pair_id) in seen:
+                    continue
+                seen.add(str(p.pair_id))
+                pairs.append(p)
+
+        for p in pairs:
+            a = canon_by_id.get(str(p.canonical_id_a))
+            b = canon_by_id.get(str(p.canonical_id_b))
+            if a is None or b is None:
+                skipped += 1
+                continue
+            sp = scorer.score(a, b, fast=True)
+            p.raw_score = sp.raw_score
+            p.calibrated_probability = sp.calibrated_probability
+            p.deterministic_tier_fired = sp.deterministic_tier_fired
+            p.deterministic_result = sp.deterministic_result
+            p.feature_vector = sp.feature_vector
+            p.shap_contributions = sp.shap_contributions
+            p.shared_blocks = sp.shared_blocks
+            p.scored_at = datetime.now(timezone.utc)
+            updated += 1
+
+    return {
+        "mode": mode,
+        "pairs_rescored": updated,
+        "skipped_missing_records": skipped,
+        "duration_seconds": round(time.time() - t0, 2),
     }
 
 

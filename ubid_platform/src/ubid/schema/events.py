@@ -37,6 +37,13 @@ class EventType(str, Enum):
     BESCOM_RECONNECT = "bescom_reconnect"
     BESCOM_TARIFF_CHANGE = "bescom_tariff_change"
 
+    # BWSSB events (water supply)
+    BWSSB_BILL_GENERATED = "bwssb_bill_generated"
+    BWSSB_BILL_PAID = "bwssb_bill_paid"
+    BWSSB_ZERO_CONSUMPTION = "bwssb_zero_consumption"
+    BWSSB_DISCONNECT = "bwssb_disconnect"
+    BWSSB_RECONNECT = "bwssb_reconnect"
+
 
 class ActivityEvent(BaseModel):
     event_id: str = Field(default_factory=lambda: str(uuid.uuid4()))

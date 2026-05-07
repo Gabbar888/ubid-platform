@@ -98,4 +98,24 @@ SIGNAL_CATALOG: dict[EventType, SignalConfig] = {
     EventType.BESCOM_TARIFF_CHANGE: SignalConfig(
         weight=0.3, cadence_days=None, sign=+1, ambiguous=True,
     ),
+
+    # ── BWSSB (water) — slightly weaker signals than BESCOM because some
+    #    businesses survive without an active water connection (e.g. rented
+    #    industrial sheds where the landlord pays water but not electricity).
+    EventType.BWSSB_BILL_GENERATED: SignalConfig(
+        weight=0.4, cadence_days=30, sign=+1,
+    ),
+    EventType.BWSSB_BILL_PAID: SignalConfig(
+        weight=0.7, cadence_days=30, sign=+1,
+    ),
+    EventType.BWSSB_ZERO_CONSUMPTION: SignalConfig(
+        weight=0.3, cadence_days=30, sign=-1,
+    ),
+    EventType.BWSSB_DISCONNECT: SignalConfig(
+        weight=0.7, cadence_days=None, sign=-1,
+        terminal=False,
+    ),
+    EventType.BWSSB_RECONNECT: SignalConfig(
+        weight=0.7, cadence_days=None, sign=+1,
+    ),
 }

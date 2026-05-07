@@ -11,6 +11,7 @@ class SourceSystem(str, Enum):
     FBIS = "fbis"
     KSPCB = "kspcb"
     BESCOM = "bescom"
+    BWSSB = "bwssb"
 
 
 class LegalForm(str, Enum):

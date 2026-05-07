@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>UBID Platform — AI for Bharat 2 — Theme 1</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.0.4/dist/reset.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.0.4/dist/reveal.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.0.4/dist/theme/white.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.0.4/plugin/highlight/monokai.css" />
+<style>
+  :root {
+    --saffron: #FF9933;
+    --saffron-deep: #E8731E;
+    --india-green: #15803D;
+    --gov-navy: #1E3A8A;
+    --gov-navy-dark: #1E2D6E;
+    --ink: #0F172A;
+    --ink-secondary: #334155;
+    --ink-muted: #475569;
+    --rule: #CBD5E1;
+    --bg-surface: #F8FAFC;
+  }
+  .reveal { font-family: 'Inter', 'Source Sans Pro', system-ui, -apple-system, sans-serif; color: var(--ink); }
+  .reveal .slides { text-align: left; }
+  .reveal h1, .reveal h2, .reveal h3, .reveal h4 {
+    color: var(--gov-navy-dark);
+    text-transform: none;
+    letter-spacing: -0.01em;
+    font-weight: 700;
+  }
+  .reveal h1 { font-size: 2.4em; margin-bottom: 0.4em; }
+  .reveal h2 {
+    font-size: 1.6em;
+    margin-bottom: 0.6em;
+    border-bottom: 3px solid var(--saffron);
+    padding-bottom: 0.2em;
+  }
+  .reveal h3 { font-size: 1.15em; color: var(--gov-navy); }
+  .reveal p, .reveal li { color: var(--ink); line-height: 1.5; }
+  .reveal small, .reveal .small { color: var(--ink-muted); font-size: 0.62em; }
+  .reveal strong, .reveal b { color: var(--gov-navy-dark); }
+  .reveal code {
+    background: rgba(255, 153, 51, 0.10);
+    color: var(--gov-navy-dark);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 0.86em;
+  }
+  .reveal pre {
+    box-shadow: 0 2px 12px rgba(15, 23, 42, 0.10);
+    border-radius: 6px;
+    font-size: 0.55em;
+    line-height: 1.4;
+  }
+  .reveal pre code {
+    background: var(--ink);
+    color: #E2E8F0;
+    padding: 16px;
+    border-radius: 6px;
+  }
+  .reveal table {
+    border-collapse: collapse;
+    margin: 0.6em 0;
+    font-size: 0.78em;
+    width: 100%;
+  }
+  .reveal table th {
+    background: var(--gov-navy);
+    color: #fff;
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 700;
+    font-size: 0.85em;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .reveal table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+  .reveal table tr:nth-child(even) td { background: var(--bg-surface); }
+
+  /* Title slide */
+  .title-slide {
+    background: linear-gradient(135deg, var(--gov-navy-dark) 0%, var(--gov-navy) 100%);
+    color: #fff !important;
+    text-align: center !important;
+    padding: 0 60px;
+  }
+  .title-slide h1, .title-slide h2, .title-slide h3, .title-slide p {
+    color: #fff !important;
+    border: none !important;
+  }
+  .title-slide h1 { font-size: 2.4em; margin-bottom: 0.2em; }
+  .title-slide .platform-kn {
+    font-size: 1em; opacity: 0.85; margin-bottom: 1em;
+  }
+  .title-slide .tag {
+    display: inline-block;
+    padding: 6px 16px;
+    background: var(--saffron);
+    color: var(--ink) !important;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.7em;
+    margin: 8px 0;
+    letter-spacing: 0.06em;
+  }
+  .title-slide .tricolor {
+    display: flex;
+    width: 200px;
+    margin: 24px auto 0 auto;
+    height: 3px;
+  }
+  .title-slide .tricolor div { flex: 1; }
+  .title-slide .tricolor .saffron { background: var(--saffron); }
+  .title-slide .tricolor .white { background: #fff; }
+  .title-slide .tricolor .green { background: var(--india-green); }
+
+  /* Section header slide */
+  .section-slide {
+    background: var(--bg-surface);
+    text-align: center !important;
+    padding: 0 60px;
+  }
+  .section-slide h1 { font-size: 2.6em; }
+  .section-slide .lead {
+    font-size: 1.1em; color: var(--ink-secondary);
+    max-width: 700px; margin: 0 auto;
+  }
+
+  /* Callouts */
+  .callout {
+    background: linear-gradient(90deg, rgba(255,153,51,0.10) 0%, rgba(255,153,51,0.04) 100%);
+    border-left: 4px solid var(--saffron);
+    padding: 12px 18px;
+    border-radius: 0 6px 6px 0;
+    margin: 0.6em 0;
+    font-size: 0.85em;
+    color: var(--ink);
+  }
+  .callout b { color: var(--saffron-deep); }
+  .callout-green {
+    background: linear-gradient(90deg, rgba(21,128,61,0.10) 0%, rgba(21,128,61,0.04) 100%);
+    border-left: 4px solid var(--india-green);
+    padding: 12px 18px;
+    border-radius: 0 6px 6px 0;
+    margin: 0.6em 0;
+    font-size: 0.85em;
+  }
+  .callout-green b { color: var(--india-green); }
+
+  /* Metric cards */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin: 0.6em 0;
+  }
+  .metric {
+    background: #fff;
+    border: 1px solid var(--rule);
+    border-left: 4px solid var(--saffron);
+    border-radius: 6px;
+    padding: 12px 14px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+  }
+  .metric .label {
+    font-size: 0.62em;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--gov-navy);
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .metric .value {
+    font-size: 1.6em;
+    font-weight: 800;
+    color: var(--ink);
+    line-height: 1;
+  }
+  .metric .sub {
+    font-size: 0.6em;
+    color: var(--ink-muted);
+    margin-top: 4px;
+  }
+
+  /* Two-column */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  .three-col {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  /* Pipeline diagram */
+  .pipeline {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    margin: 1em 0;
+    flex-wrap: wrap;
+  }
+  .pipe-box {
+    background: #fff;
+    border: 2px solid var(--rule);
+    border-radius: 6px;
+    padding: 10px 12px;
+    text-align: center;
+    font-size: 0.7em;
+    min-width: 110px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  }
+  .pipe-box.source { background: #DBEAFE; border-color: #93C5FD; }
+  .pipe-box.process { background: #FFF7ED; border-color: var(--saffron); }
+  .pipe-box.target { background: #DCFCE7; border-color: var(--india-green); font-weight: 700; }
+  .pipe-arrow { font-size: 1.4em; color: var(--gov-navy); margin: 0 4px; }
+
+  /* Reveal controls saffron */
+  .reveal .controls button.enabled { color: var(--saffron); }
+  .reveal .progress { color: var(--saffron); }
+
+  /* Slide footer */
+  .reveal .slide-footer {
+    position: absolute;
+    bottom: 12px; left: 60px; right: 60px;
+    font-size: 0.45em;
+    color: var(--ink-muted);
+    border-top: 1px solid var(--rule);
+    padding-top: 6px;
+    display: flex;
+    justify-content: space-between;
+  }
+</style>
+</head>
+
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- ── 1. Title ─────────────────────────────────────────────── -->
+<section class="title-slide">
+  <div class="tag">AI FOR BHARAT 2 · THEME 1</div>
+  <h1>Unified Business Identifier</h1>
+  <h1 style="margin-top:-0.4em">&amp; Active Business Intelligence</h1>
+  <div class="platform-kn">ಏಕೀಕೃತ ವ್ಯಾಪಾರ ಗುರುತಿಸುವಿಕೆ ವೇದಿಕೆ</div>
+  <h3 style="margin-top:1em">A platform for Karnataka Commerce &amp; Industries</h3>
+  <p style="font-size:0.7em; opacity:0.85;">Department of Commerce &amp; Industries · Government of Karnataka</p>
+  <div class="tricolor">
+    <div class="saffron"></div>
+    <div class="white"></div>
+    <div class="green"></div>
+  </div>
+</section>
+
+<!-- ── 2. The problem ───────────────────────────────────────── -->
+<section>
+  <h2>The problem</h2>
+  <p>Karnataka's business-facing regulatory landscape is served by <b>40+ State department systems</b> — Shop &amp; Establishment, Factories, Labour, KSPCB, BESCOM, BWSSB, Fire, Food Safety…</p>
+  <h3>Each was built in isolation</h3>
+  <ul>
+    <li>Own schema, own record IDs, own validation rules</li>
+    <li>Business name and address are free text</li>
+    <li>PAN and GSTIN only partially captured</li>
+    <li>No reliable join key across systems</li>
+    <li>Same business = different rows in different databases</li>
+  </ul>
+  <div class="callout">
+    <b>Result:</b> Karnataka C&amp;I cannot today answer basic questions about its own industrial base —
+    <i>how many businesses are operating, in what sectors, where, and with what recent activity.</i>
+  </div>
+</section>
+
+<!-- ── 3. Two coupled problems ──────────────────────────────── -->
+<section>
+  <h2>Two coupled sub-problems</h2>
+  <div class="two-col">
+    <div>
+      <h3>Part A — Entity Resolution</h3>
+      <p>Given master data from N State systems, automatically link records that refer to the same real-world business and assign each a single
+      <b>Unified Business Identifier (UBID)</b>.</p>
+    </div>
+    <div>
+      <h3>Part B — Activity Inference</h3>
+      <p>Given a stream of activity events (inspections, renewals, bills, returns), infer whether each UBID is currently
+      <b>Active / Dormant / Closed</b>.</p>
+    </div>
+  </div>
+  <div class="callout">
+    <b>B is meaningless without A.</b> Sequenced but mutually informing — a UBID never appearing in any event stream is suspicious; reviewer corrections to A change the evidence base for B.
+  </div>
+</section>
+
+<!-- ── 4. Non-negotiables ───────────────────────────────────── -->
+<section>
+  <h2>Non-negotiables shaped the architecture</h2>
+  <table>
+    <thead><tr><th>Constraint</th><th>Architectural consequence</th></tr></thead>
+    <tbody>
+      <tr><td><b>No source-system changes</b></td><td>Federation layer; pull-based ingest only; never write back</td></tr>
+      <tr><td><b>Synthetic / scrambled data only</b></td><td>No memorising real entities; structural matching only</td></tr>
+      <tr><td><b>Decisions explainable + reversible</b></td><td>Two-tier scoring + SHAP per pair; versioned linkage</td></tr>
+      <tr><td><b>Wrong merge &gt; missed merge</b></td><td>Conservative auto-link threshold (0.95); cannot-link wins</td></tr>
+      <tr><td><b>No hosted-LLM calls on PII</b></td><td>All processing on-prem; no third-party APIs</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ── 5. Architecture ──────────────────────────────────────── -->
+<section>
+  <h2>System architecture</h2>
+  <div class="pipeline">
+    <div class="pipe-box source">e-Karmika</div>
+    <div class="pipe-box source">FBIS</div>
+    <div class="pipe-box source">KSPCB</div>
+    <div class="pipe-box source">BESCOM</div>
+    <div class="pipe-box source">BWSSB</div>
+  </div>
+  <div style="text-align:center; font-size:1.6em; color:var(--gov-navy)">▼</div>
+  <div class="pipeline">
+    <div class="pipe-box process">Canonicalise</div>
+    <span class="pipe-arrow">→</span>
+    <div class="pipe-box process">Block (OpenSearch)</div>
+    <span class="pipe-arrow">→</span>
+    <div class="pipe-box process">Score (LightGBM)</div>
+    <span class="pipe-arrow">→</span>
+    <div class="pipe-box process">Cluster (union-find)</div>
+  </div>
+  <div style="text-align:center; font-size:1.6em; color:var(--gov-navy)">▼</div>
+  <div class="pipeline">
+    <div class="pipe-box target" style="min-width:160px">UBID Graph</div>
+  </div>
+  <div style="text-align:center; font-size:1.6em; color:var(--gov-navy)">▼</div>
+  <div class="pipeline">
+    <div class="pipe-box" style="background:#F0FDFA; border-color:#5EEAD4">Activity engine</div>
+    <div class="pipe-box" style="background:#FEF3F2; border-color:#FCA5A5">Reviewer console</div>
+  </div>
+</section>
+
+<!-- ── 6. Tech stack — infra ────────────────────────────────── -->
+<section>
+  <h2>Tech stack — infrastructure</h2>
+  <p style="font-size:0.85em">11 services in <code>docker compose</code>, all on-prem.</p>
+  <table>
+    <thead><tr><th>Service</th><th>Why we chose it</th></tr></thead>
+    <tbody>
+      <tr><td><b>PostgreSQL 16</b></td><td>Source of truth — canonical records, linkage pairs, constraints, decisions</td></tr>
+      <tr><td><b>OpenSearch 2.16</b></td><td>Inverted-index blocking on PAN, pin+name soundex, trigram name-similarity</td></tr>
+      <tr><td><b>Neo4j 5.24</b></td><td>Legal Entity → UBID → Source Records hierarchy graph</td></tr>
+      <tr><td><b>Redis 7</b></td><td>source_id → UBID hot-path cache, verdict cache</td></tr>
+      <tr><td><b>Kafka 7.7 (KRaft)</b></td><td>Stream ingestion of activity events; quarantine topic</td></tr>
+      <tr><td><b>DuckDB + Parquet</b></td><td>UBID-keyed event warehouse (analytical queries)</td></tr>
+      <tr><td><b>Nominatim (self-hosted)</b></td><td>OpenStreetMap geocoder, on-prem (no third-party API)</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ── 7. Tech stack — backend + ML ─────────────────────────── -->
+<section>
+  <h2>Tech stack — backend &amp; ML</h2>
+  <div class="three-col">
+    <div>
+      <h3>Backend</h3>
+      <ul>
+        <li><b>FastAPI + uvicorn</b></li>
+        <li>SQLAlchemy ORM</li>
+        <li>pydantic typed schemas</li>
+        <li>22 REST endpoints</li>
+      </ul>
+    </div>
+    <div>
+      <h3>ML</h3>
+      <ul>
+        <li><b>LightGBM</b> — pairwise scorer</li>
+        <li>scikit-learn — isotonic calibration</li>
+        <li>SHAP — per-pair contributions</li>
+        <li>rapidfuzz — string distances</li>
+        <li>indic-transliteration — Kannada↔Roman</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Frontend</h3>
+      <ul>
+        <li><b>Streamlit</b> — gov-themed reviewer console</li>
+        <li>Plotly — calibration / timeline charts</li>
+        <li>12 pages; bilingual EN+ಕನ್ನಡ</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ── 8. Why LightGBM ──────────────────────────────────────── -->
+<section>
+  <h2>Why LightGBM (vs. alternatives)</h2>
+  <table>
+    <thead><tr><th>Reason</th><th>Detail</th></tr></thead>
+    <tbody>
+      <tr><td><b>Mixed features</b></td><td>Native handling of continuous, binary, and categorical features without dummy-encoding</td></tr>
+      <tr><td><b>Per-pair SHAP</b></td><td>Every linkage decision decomposes into "these features pushed up, those pushed down" — passes a procurement review</td></tr>
+      <tr><td><b>Fast inference</b></td><td>Sub-millisecond per pair at scale</td></tr>
+      <tr><td><b>Small-data friendly</b></td><td>Trains on the synthetic ~1700 labelled pairs</td></tr>
+      <tr><td><b>No independence assumption</b></td><td>Fellegi-Sunter assumes name-sim and address-sim are independent; they're not</td></tr>
+    </tbody>
+  </table>
+  <div class="callout-green">
+    <b>Bonus:</b> isotonic regression on top calibrates raw scores into probabilities. <b>ECE = 0.013</b> — well-calibrated.
+  </div>
+</section>
+
+<!-- ── 9. Feature vector ───────────────────────────────────── -->
+<section>
+  <h2>The 25-feature vector</h2>
+  <p style="font-size:0.78em">Five groups, each captures a different signal type:</p>
+  <table>
+    <thead><tr><th>Group</th><th>Features</th></tr></thead>
+    <tbody>
+      <tr><td><b>Name (5)</b></td><td>Jaro-Winkler · token-set · Jaccard trigram · LCS ratio · exact-stripped</td></tr>
+      <tr><td><b>Address (6)</b></td><td>pin eq · door eq · locality match · cross distance · Levenshtein · <b>geo distance (km) ← Nominatim</b></td></tr>
+      <tr><td><b>Identifier (4)</b></td><td>GSTIN eq · phone eq · email-domain eq · PAN agreement</td></tr>
+      <tr><td><b>Structural (4)</b></td><td>sector NIC · legal-form · log employee-ratio · log reg-date diff</td></tr>
+      <tr><td><b>Blocking (6)</b></td><td>shared PAN · derived PAN · pin+name · pin+door · phone · n_shared</td></tr>
+    </tbody>
+  </table>
+  <div class="callout">
+    <b>Deliberately no neural embeddings.</b> Bengaluru-specific business vocabulary (locality names, family-name compounds) is poorly represented in pretrained multilingual models. Probabilistic string distances give us decomposable, defensible features.
+  </div>
+</section>
+
+<!-- ── 10. Two-tier scoring ────────────────────────────────── -->
+<section>
+  <h2>Two-tier scoring</h2>
+  <h3>Deterministic tier (auto-decides 30–50% of cases)</h3>
+<pre><code class="python">if PAN(a) == PAN(b) and pin(a) == pin(b):
+    → match (probability 1.0)
+if PAN(a) ≠ PAN(b) and both non-null:
+    → non-match (probability 0.0)</code></pre>
+  <p style="font-size:0.8em">Easy to explain to a reviewer ("these share PAN ABCDE1234F").</p>
+
+  <h3>Probabilistic tier</h3>
+  <p>For everything else: 25-feature vector → LightGBM → raw score → isotonic calibrator → calibrated probability.</p>
+  <div class="callout">
+    Decision rule: <b>p ≥ 0.95</b> → auto-link &nbsp;·&nbsp;
+    <b>0.55 ≤ p &lt; 0.95</b> → review queue &nbsp;·&nbsp;
+    <b>p &lt; 0.55</b> → reject
+  </div>
+</section>
+
+<!-- ── 11. Inline clustering ───────────────────────────────── -->
+<section>
+  <h2>Inline clustering — single biggest improvement</h2>
+  <ol>
+    <li>Block — find candidate pairs</li>
+    <li>Score — LightGBM probability</li>
+    <li><b>Union-find</b> over auto-linked pairs (this batch + historical) <em>respecting cannot-link constraints</em></li>
+    <li>Each connected component = one UBID</li>
+    <li>Multiple existing UBIDs merge if a new record connects them</li>
+  </ol>
+  <div class="metrics" style="grid-template-columns: repeat(2, 1fr)">
+    <div class="metric" style="border-left-color:#991B1B">
+      <div class="label">Before</div>
+      <div class="value" style="color:#991B1B">0.40</div>
+      <div class="sub">B3 F1 — one UBID per record</div>
+    </div>
+    <div class="metric" style="border-left-color:var(--india-green)">
+      <div class="label">After inline clustering</div>
+      <div class="value" style="color:var(--india-green)">0.92</div>
+      <div class="sub">B3 F1 — proper clusters</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── 12. Activity engine ─────────────────────────────────── -->
+<section>
+  <h2>Activity engine — cadence-aware decay</h2>
+  <p>Each event type has a <b>weight</b> w and a <b>cadence</b> τ.</p>
+<pre><code>contribution(t) = w · exp( -Δt / α·τ )</code></pre>
+  <table style="font-size:0.72em">
+    <thead><tr><th>Event</th><th>w</th><th>τ (days)</th><th>Sign</th></tr></thead>
+    <tbody>
+      <tr><td>BESCOM bill paid</td><td>0.9</td><td>30</td><td>+</td></tr>
+      <tr><td>Factory Form 20 (annual)</td><td>0.8</td><td>365</td><td>+</td></tr>
+      <tr><td>KSPCB CFO renewal</td><td>0.9</td><td>varies</td><td>+</td></tr>
+      <tr><td>BESCOM zero consumption</td><td>0.4</td><td>30</td><td>−</td></tr>
+      <tr><td>S&amp;E renewal pre-2019</td><td>0.7</td><td>1825</td><td>+</td></tr>
+    </tbody>
+  </table>
+  <div class="callout">
+    Continuity score <b>S = Σ contributions</b>. Bands: S ≥ 1.5 → Active · 0.15 ≤ S &lt; 1.5 → Dormant · else Closed-by-silence.
+    Plus deterministic overrides for closure events. Sector priors widen the Dormant band for seasonal businesses.
+  </div>
+</section>
+
+<!-- ── 13. Reviewer workflow ───────────────────────────────── -->
+<section>
+  <h2>Reviewer workflow</h2>
+  <h3>Review Queue — 4 decision types</h3>
+  <ul>
+    <li><b>Confirm match</b> → must-link constraint + positive training label</li>
+    <li><b>Reject</b> → cannot-link constraint + negative training label + split if currently merged</li>
+    <li><b>Defer to senior</b> → priority boost</li>
+    <li><b>Flag quality</b> → mark source record for data-quality review</li>
+  </ul>
+  <h3>Sorting Mat (Audit Merges)</h3>
+  <p>For multi-record UBIDs (40+ records possible): sort each into Group A/B/C/Solo. One submit click → atomic regroup with hundreds of constraint writes.</p>
+  <h3>Two-tier reviewers</h3>
+  <p>Junior (5–10 min cases) · Senior (escalations, policy-setting precedents).</p>
+</section>
+
+<!-- ── 14. Active-learning loop ────────────────────────────── -->
+<section>
+  <h2>Active-learning loop — model gets better with every decision</h2>
+  <ol>
+    <li>Reviewer decides → row written to <code>training_labels</code></li>
+    <li><code>POST /admin/retrain</code> re-fits LightGBM + recalibrates isotonic</li>
+    <li><b>A/B against previous model</b> — pre/post Brier, ECE, F1 reported every run</li>
+    <li><b>Retrain history</b> chart (Admin page) shows model improving over time</li>
+    <li><b>Constraint propagation</b> — must-link / cannot-link survive future re-clusterings</li>
+    <li><b>Smart re-score</b> — only review-queue + boundary pairs after retrain (10 s vs hours at scale)</li>
+  </ol>
+  <div class="callout-green">
+    Every Sorting-Mat audit on a 30-record cluster generates <b>~600 labelled pairs</b> in one click.
+  </div>
+</section>
+
+<!-- ── 15. Self-hosted Nominatim ───────────────────────────── -->
+<section>
+  <h2>Self-hosted Nominatim — proposal-compliant geocoding</h2>
+  <p>Why <b>self-hosted</b> rather than Google / HERE:</p>
+  <ul>
+    <li>The proposal forbids hosted-API calls on PII addresses</li>
+    <li>Nominatim runs in our Docker stack, uses OpenStreetMap data</li>
+    <li>Free, on-prem, no rate limits, no data leaving the server</li>
+  </ul>
+  <h3>How it plugs in</h3>
+  <ol>
+    <li>Adapter parses address → canonical record</li>
+    <li>Geocoder asks Nominatim for <code>(lat, lng)</code></li>
+    <li>Falls back to a curated 85-entry locality dictionary if Nominatim misses</li>
+    <li>Coordinates feed the <code>addr_geo_distance_km</code> feature in the scorer</li>
+  </ol>
+</section>
+
+<!-- ── 16. Nominatim A/B ──────────────────────────────────── -->
+<section>
+  <h2>Nominatim A/B — measurable lift</h2>
+  <p>Same dataset, only difference: dict-only vs. Nominatim+dict coordinates.</p>
+  <table>
+    <thead><tr><th>Metric</th><th>Dict-only</th><th>Nominatim + dict</th><th>Δ</th></tr></thead>
+    <tbody>
+      <tr><td>Pairwise precision</td><td>0.9917</td><td>0.9920</td><td>+0.0003</td></tr>
+      <tr><td>Pairwise recall</td><td>0.5742</td><td>0.5933</td><td><b>+0.019</b></td></tr>
+      <tr><td><b>Pairwise F1</b></td><td>0.7273</td><td><b>0.7425</b></td><td><b>+0.015</b></td></tr>
+      <tr><td>Brier score</td><td>0.0087</td><td>0.0086</td><td>−0.0001</td></tr>
+      <tr><td>Distinct geo distances seen</td><td>102</td><td>166</td><td><b>+64</b></td></tr>
+    </tbody>
+  </table>
+  <div class="callout">
+    <b>addr_geo_distance_km</b> ranks <b>5th of 25 features by gain</b> in the trained model — actively used, not redundant.
+  </div>
+  <p class="small"><i>Synthetic addresses limit Nominatim's hit rate to 7%. With real addresses (proper survey numbers in OSM), expect ≥70% hit rate and 5–8× larger lift.</i></p>
+</section>
+
+<!-- ── 17. 5th adapter ─────────────────────────────────────── -->
+<section>
+  <h2>5th adapter — BWSSB (water supply)</h2>
+  <p>Proves the "adding a new source is just one adapter file" claim from the proposal:</p>
+  <ol>
+    <li>Add <code>BWSSB = "bwssb"</code> to <code>SourceSystem</code> enum</li>
+    <li>Create <code>bwssb_adapter.py</code> (114 lines, modelled on BESCOM)</li>
+    <li>Register in <code>_ADAPTERS</code> dict</li>
+    <li>Add 5 new event types · 5 signal configs</li>
+  </ol>
+  <div class="callout-green">
+    <b>Zero changes</b> to scoring, blocking, clustering, verdict engine, or reviewer code.<br>
+    Live: <b>31 BWSSB connections ingested</b>, <b>28 auto-linked into existing UBIDs by address</b>, <b>643 events joined</b>.
+  </div>
+</section>
+
+<!-- ── 18. Reversibility ───────────────────────────────────── -->
+<section>
+  <h2>Reversibility — every decision is undoable</h2>
+  <div class="three-col">
+    <div>
+      <h3>Unmerge</h3>
+      <p style="font-size:0.85em">Activity Status page — split one wrong record off into a new UBID + cannot-link.</p>
+    </div>
+    <div>
+      <h3>Sorting Mat</h3>
+      <p style="font-size:0.85em">Audit Merges — split N records into K sub-clusters in one transaction.</p>
+    </div>
+    <div>
+      <h3>Reject</h3>
+      <p style="font-size:0.85em">Review Queue — write cannot-link, split if currently merged.</p>
+    </div>
+  </div>
+  <p>Every operation logged in <code>reviewer_decisions</code> + <code>linkage_constraints</code>. The Audit Trail timeline on Activity Status shows the full history per UBID.</p>
+</section>
+
+<!-- ── 19. Quarantine ──────────────────────────────────────── -->
+<section>
+  <h2>Quarantine — events never silently dropped</h2>
+  <p>Activity events arrive keyed by source-system identifiers. Some can't be joined:</p>
+  <ul>
+    <li>Source record not yet ingested</li>
+    <li>Linkage was below auto-link threshold</li>
+    <li>Sub-identifier not yet attached</li>
+  </ul>
+  <div class="callout-green">
+    <b>These events go to a quarantine queue, indexed by source identifier, and re-played whenever the linkage table updates.</b>
+    Top-level dashboard metric. Never silently dropped.
+  </div>
+</section>
+
+<!-- ── 20. Final metrics ───────────────────────────────────── -->
+<section>
+  <h2>Final platform metrics</h2>
+  <p style="font-size:0.78em">Measured against <code>data/synthetic/ground_truth_links.csv</code> (60 entities, 236 records):</p>
+  <div class="metrics">
+    <div class="metric"><div class="label">Pairwise Precision</div><div class="value">0.99</div><div class="sub">at p ≥ 0.95</div></div>
+    <div class="metric"><div class="label">Pairwise F1</div><div class="value">0.91</div><div class="sub">at p ≥ 0.70</div></div>
+    <div class="metric"><div class="label">Brier score</div><div class="value">0.009</div><div class="sub">excellent calibration</div></div>
+    <div class="metric"><div class="label">ECE</div><div class="value">0.013</div><div class="sub">well-calibrated</div></div>
+  </div>
+  <div class="metrics" style="margin-top:8px">
+    <div class="metric" style="border-left-color:var(--india-green)"><div class="label">B3 cluster F1</div><div class="value" style="color:var(--india-green)">0.92</div><div class="sub">vs. 0.40 baseline</div></div>
+    <div class="metric" style="border-left-color:var(--india-green)"><div class="label">Verdict accuracy</div><div class="value" style="color:var(--india-green)">82%</div><div class="sub">49 / 60 entities</div></div>
+    <div class="metric"><div class="label">UBIDs predicted</div><div class="value">75</div><div class="sub">vs 60 ground-truth</div></div>
+    <div class="metric"><div class="label">Records linked</div><div class="value">267</div><div class="sub">across 5 sources</div></div>
+  </div>
+</section>
+
+<!-- ── 21. Frontend ────────────────────────────────────────── -->
+<section>
+  <h2>Frontend — 12 pages, government-themed</h2>
+  <table style="font-size:0.7em">
+    <tbody>
+      <tr><td>📊 Dashboard</td><td>Live metrics + verdict distribution + calibration chart</td></tr>
+      <tr><td>🔍 Browse UBIDs</td><td>Filterable, paginated grid with CSV export</td></tr>
+      <tr><td>📋 Review Queue</td><td>Pending pairs · SHAP per pair · bulk actions</td></tr>
+      <tr><td>🧐 Audit Merges</td><td>Sorting Mat · record comparison · group decision</td></tr>
+      <tr><td>🧭 UBID Lookup</td><td>Resolve any source ID / PAN / name+pin → UBID</td></tr>
+      <tr><td>📈 Activity Status</td><td>Verdict, evidence timeline, audit trail, unmerge</td></tr>
+      <tr><td>🚧 Quarantine</td><td>Stuck events + retry</td></tr>
+      <tr><td>📜 Reviewer Log</td><td>Decision history + per-reviewer leaderboard</td></tr>
+      <tr><td>❓ Query Explorer</td><td>Run analytical queries (the exemplar)</td></tr>
+      <tr><td>📤 Ingest Data</td><td>CSV upload + JSONL events</td></tr>
+      <tr><td>⚙️ Admin</td><td>Retrain · re-score · calibration · synonyms · verdicts</td></tr>
+      <tr><td>ℹ️ About</td><td>Architecture · live metrics · proposal compliance · glossary</td></tr>
+    </tbody>
+  </table>
+  <p class="small">Bilingual EN+ಕನ್ನಡ header · Karnataka emblem · saffron + India-green tricolor accents · pill-style nav · help-tooltip toggle.</p>
+</section>
+
+<!-- ── 22. Exemplar query ──────────────────────────────────── -->
+<section>
+  <h2>The exemplar query — now answerable</h2>
+  <div class="callout" style="font-size:1em; padding:18px 22px">
+    <b>"Active factories in pin code 560058 with no inspection in the last 18 months."</b>
+  </div>
+  <p>Today this is <b>impossible</b> in Karnataka. Factories live in FBIS, inspections in another DB, no join key.</p>
+<pre><code class="bash">curl -X POST http://localhost:8000/api/v1/query/active-businesses \
+  -H "Content-Type: application/json" \
+  -d '{
+    "verdict": "active",
+    "pin_code": "560058",
+    "source_system": "fbis",
+    "no_event_type": "fac_inspection",
+    "no_event_since_days": 540
+  }'</code></pre>
+  <p>Returns a list of UBIDs with verdict, score, and supporting evidence — in milliseconds.</p>
+</section>
+
+<!-- ── 23. Risks addressed ─────────────────────────────────── -->
+<section>
+  <h2>Risks &amp; mitigations</h2>
+  <table>
+    <thead><tr><th>Risk</th><th>Mitigation</th></tr></thead>
+    <tbody>
+      <tr><td>BESCOM consumer name = landlord, not business</td><td>Risk flag + address-only matching with raised threshold</td></tr>
+      <tr><td>Wrong merge corrupts events for two businesses</td><td>Conservative auto-link, cannot-link constraints, reversibility</td></tr>
+      <tr><td>Reviewer bottleneck</td><td>Active-learning queue ordering, bulk decisions</td></tr>
+      <tr><td>Calibration drift</td><td>Reliability diagrams refreshed weekly, retrain history chart</td></tr>
+      <tr><td>Schema drift in source systems</td><td>Adapters validate canonical schema, fail loudly</td></tr>
+      <tr><td>Pre-PAN-mandate records</td><td>Soft-match with raised threshold, address-driven</td></tr>
+      <tr><td>Multi-state legal entity</td><td>Embedded PAN extracted from GSTIN; one Legal Entity, one UBID per state</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ── 24. What's left ─────────────────────────────────────── -->
+<section>
+  <h2>What's still future work</h2>
+  <ul>
+    <li>Real Kafka wiring for activity events (currently synchronous HTTP)</li>
+    <li>Authentication (basic auth + role-based access)</li>
+    <li>Drift monitoring chart (calibration over time, feature distribution drift)</li>
+    <li>Time-travel view (any UBID, any past date)</li>
+    <li>Webhook notifications for verdict changes</li>
+    <li><b>More adapters</b> (the architecture is designed for 40+ — we proved it with 5)</li>
+  </ul>
+  <div class="callout-green">
+    Project is at <b>~75% hackathon scope, 100% proposal compliance</b>.
+    Remaining items are production hardening, not feature gaps.
+  </div>
+</section>
+
+<!-- ── 25. Live demo ───────────────────────────────────────── -->
+<section class="section-slide">
+  <h1>Live demo 🚀</h1>
+  <p class="lead">Open <code>http://localhost:8501</code> and walk through:
+  Dashboard → Browse → Review Queue → Audit Merges → Admin → Query Explorer.</p>
+</section>
+
+<!-- ── 26. Thanks ──────────────────────────────────────────── -->
+<section class="title-slide">
+  <h1 style="margin-top:1em">Thank you</h1>
+  <h3 style="opacity:0.85">Questions?</h3>
+  <p style="font-size:0.7em; margin-top:2em; opacity:0.8;">
+    <b>Codebase:</b> <code>ubid-platform/ubid_platform/</code><br>
+    <b>Docs:</b> HANDOFF.md (state) · IMPROVEMENTS.md (roadmap) · PRESENTATION.md (this deck)<br>
+    <b>API:</b> http://localhost:8000/docs &nbsp;·&nbsp; <b>UI:</b> http://localhost:8501
+  </p>
+  <div class="tricolor">
+    <div class="saffron"></div>
+    <div class="white"></div>
+    <div class="green"></div>
+  </div>
+</section>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.0.4/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.0.4/plugin/highlight/highlight.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.0.4/plugin/notes/notes.js"></script>
+<script>
+Reveal.initialize({
+  hash: true,
+  transition: 'slide',
+  transitionSpeed: 'fast',
+  width: 1280,
+  height: 800,
+  margin: 0.06,
+  minScale: 0.4,
+  maxScale: 1.6,
+  controls: true,
+  progress: true,
+  history: true,
+  slideNumber: 'c/t',
+  plugins: [ RevealHighlight, RevealNotes ]
+});
+</script>
+
+</body>
+</html>

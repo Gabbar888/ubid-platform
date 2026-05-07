@@ -14,6 +14,7 @@ from ubid.ingest.ekarmika_adapter import EKarmikaAdapter
 from ubid.ingest.fbis_adapter import FBISAdapter
 from ubid.ingest.kspcb_adapter import KSPCBAdapter
 from ubid.ingest.bescom_adapter import BESCOMAdapter
+from ubid.ingest.bwssb_adapter import BWSSBAdapter
 from ubid.blocking.opensearch_blocker import bulk_index, find_candidates
 from ubid.clustering.union_find import UnionFind
 from ubid.scoring.lgbm_scorer import get_scorer
@@ -33,6 +34,7 @@ _ADAPTERS = {
     SourceSystem.FBIS:     FBISAdapter(),
     SourceSystem.KSPCB:    KSPCBAdapter(),
     SourceSystem.BESCOM:   BESCOMAdapter(),
+    SourceSystem.BWSSB:    BWSSBAdapter(),
 }
 
 
@@ -56,6 +58,17 @@ def ingest_records(source: SourceSystem, body: IngestRequest):
     raw_records = adapter.adapt_batch(body.records)
     if not raw_records:
         return IngestResponse(accepted=0, auto_linked=0, review_queued=0, new_ubids=0)
+
+    # ── Step 0: Geocode (locality / pin / district lookup, optionally Nominatim)
+    # Mutates rec.latitude / rec.longitude in place. Best-effort — records
+    # without a recognisable locality stay unc oded and just skip the
+    # addr_geo_distance_km feature.
+    from ubid.canonicalize.geocoder import geocode_and_attach
+    for rec in raw_records:
+        try:
+            geocode_and_attach(rec)
+        except Exception as e:
+            logger.debug("Geocoding failed for %s: %s", rec.source_record_id, e)
 
     # ── Step 1: Upsert canonical records, fixing canonical_id consistency ─────
     # If a record already exists in Postgres, reuse its canonical_id so that
@@ -237,6 +250,8 @@ def ingest_records(source: SourceSystem, body: IngestRequest):
                     db.execute(text("""
                         UPDATE ubid_source_links SET ubid = :t WHERE ubid = :o
                     """), {"t": target_ubid, "o": old})
+                    # Drop dependent rows that FK to the old ubid_nodes row
+                    db.execute(text("DELETE FROM activity_verdicts WHERE ubid = :o"), {"o": old})
                     db.execute(text("DELETE FROM ubid_nodes WHERE ubid = :o"), {"o": old})
                     redis_cache.invalidate_verdict(old)
                 redis_cache.invalidate_verdict(target_ubid)

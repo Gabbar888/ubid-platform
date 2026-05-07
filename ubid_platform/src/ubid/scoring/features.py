@@ -96,7 +96,17 @@ def compute(a: CanonicalRecord, b: CanonicalRecord) -> dict[str, float]:
         fv["addr_levenshtein_residual"] = MISSING
 
     if a.latitude and a.longitude and b.latitude and b.longitude:
-        fv["addr_geo_distance_km"] = _haversine_km(a.latitude, a.longitude, b.latitude, b.longitude)
+        # Skip identical-coord pairs: centroid-based geocoding (locality dict)
+        # gives every record in the same locality the same lat/lng, which would
+        # be redundant with addr_locality_match. Only emit the feature when the
+        # two records have meaningfully different coords (precision >= 100m).
+        if (abs(a.latitude - b.latitude) < 1e-3
+            and abs(a.longitude - b.longitude) < 1e-3):
+            fv["addr_geo_distance_km"] = MISSING
+        else:
+            fv["addr_geo_distance_km"] = _haversine_km(
+                a.latitude, a.longitude, b.latitude, b.longitude
+            )
     else:
         fv["addr_geo_distance_km"] = MISSING
 

@@ -399,6 +399,281 @@ def unmerge_pair(body: UnmergeRequest):
     }
 
 
+class RegroupRequest(BaseModel):
+    ubid: str
+    groupings: dict[str, str]   # canonical_id -> group label (or "Solo")
+    reviewer_id: str
+    reviewer_tier: str = "junior"
+    notes: Optional[str] = None
+
+
+@router.post("/regroup")
+def regroup_ubid(body: RegroupRequest):
+    """Atomically split a UBID into N sub-clusters according to reviewer-assigned groups.
+
+    For each group with ≥2 members, a single UBID holds all of them, and a
+    must-link constraint is written between every pair of members.
+
+    For each `Solo`-labelled record, a brand-new UBID is created and a
+    cannot-link constraint is written against every other record in the
+    cluster.
+
+    Cross-group pairs always get cannot-link constraints regardless of size.
+
+    Every constraint is also written as a `training_labels` row and a
+    `reviewer_decisions` row, so the next `/admin/retrain` consumes them.
+    """
+    import uuid as _uuid
+    from datetime import datetime, timezone
+    from sqlalchemy import select, text
+    from ubid.storage.postgres import (
+        get_db, LinkagePairORM, LinkageConstraintORM,
+        ReviewerDecisionORM, TrainingLabelORM, UBIDNodeORM,
+        CanonicalRecordORM,
+    )
+    from ubid.storage import redis_cache
+
+    if not body.groupings:
+        raise HTTPException(400, "groupings is empty")
+
+    # ── Validate ─────────────────────────────────────────────────────────────
+    with get_db() as db:
+        node = db.get(UBIDNodeORM, body.ubid)
+        if not node:
+            raise HTTPException(404, f"UBID {body.ubid} not found")
+
+        members = db.execute(text("""
+            SELECT canonical_id FROM ubid_source_links WHERE ubid = :u
+        """), {"u": body.ubid}).fetchall()
+        actual_ids = {str(m.canonical_id) for m in members}
+
+    provided_ids = set(body.groupings.keys())
+    if provided_ids != actual_ids:
+        missing = sorted(actual_ids - provided_ids)
+        extra = sorted(provided_ids - actual_ids)
+        raise HTTPException(
+            400,
+            f"Groupings must contain exactly the UBID's current members. "
+            f"Missing: {missing[:3]}{' ...' if len(missing) > 3 else ''}. "
+            f"Extra: {extra[:3]}{' ...' if len(extra) > 3 else ''}"
+        )
+
+    # ── Build group → [canonical_ids] map. Each "Solo" gets its own bucket ───
+    groups: dict[str, list[str]] = {}
+    for cid, label in body.groupings.items():
+        norm = (label or "").strip()
+        if norm.lower() in ("solo", "isolate", "+ new group"):
+            groups[f"__solo_{cid}"] = [cid]
+        else:
+            groups.setdefault(norm or "Group 1", []).append(cid)
+
+    # If everyone is in one group, this is identical to approve_ubid
+    if len(groups) == 1 and "__solo_" not in next(iter(groups)):
+        return approve_ubid(ApproveUBIDRequest(
+            ubid=body.ubid,
+            reviewer_id=body.reviewer_id,
+            reviewer_tier=body.reviewer_tier,
+            notes=body.notes or "regroup → all same group",
+        ))
+
+    # Pick "keeper" group — largest, alphabetical tiebreak
+    keeper_label = max(
+        groups.keys(),
+        key=lambda k: (len(groups[k]), -ord(k[0]) if k else 0),
+    )
+
+    new_ubids_created = 0
+    moved_count = 0
+    must_links_added = 0
+    cannot_links_added = 0
+    decisions_logged = 0
+    now = datetime.now(timezone.utc)
+
+    with get_db() as db:
+        # ── Phase 1: assign every member to a target UBID ────────────────────
+        cid_to_target: dict[str, str] = {}
+        for label, members_in_group in groups.items():
+            if label == keeper_label:
+                target = body.ubid
+            else:
+                new_ubid = str(_uuid.uuid4())
+                rep_id = members_in_group[0]
+                rep = db.get(CanonicalRecordORM, rep_id)
+                db.add(UBIDNodeORM(
+                    ubid=new_ubid,
+                    pin_code=rep.pin_code if rep else None,
+                    district=rep.district if rep else None,
+                    sector_canonical=(rep.nic_code or rep.sector_raw) if rep else None,
+                    created_at=now,
+                    updated_at=now,
+                ))
+                new_ubids_created += 1
+                target = new_ubid
+            for m in members_in_group:
+                cid_to_target[m] = target
+
+        db.flush()
+
+        # ── Phase 2: move source links for non-keepers ───────────────────────
+        for cid, target in cid_to_target.items():
+            if target == body.ubid:
+                continue
+            db.execute(text("""
+                UPDATE ubid_source_links
+                SET ubid = :new, linked_by = 'reviewer:regroup', linked_at = :t
+                WHERE canonical_id = :cid
+            """), {"new": target, "cid": cid, "t": now})
+            moved_count += 1
+            cr = db.get(CanonicalRecordORM, cid)
+            if cr:
+                redis_cache.set_ubid_for_source(cr.source_system, cr.source_record_id, target)
+
+        # ── Phase 3: write constraints + training labels + decisions ─────────
+        all_cids = list(body.groupings.keys())
+        for i in range(len(all_cids)):
+            for j in range(i + 1, len(all_cids)):
+                a, b = sorted([all_cids[i], all_cids[j]])
+                same_group = (cid_to_target[a] == cid_to_target[b])
+                ctype = "must_link" if same_group else "cannot_link"
+
+                # Find or create linkage_pair (FK requirement for decisions)
+                pair = db.execute(
+                    select(LinkagePairORM).where(
+                        LinkagePairORM.canonical_id_a == a,
+                        LinkagePairORM.canonical_id_b == b,
+                    )
+                ).scalar_one_or_none()
+                if not pair:
+                    pair = LinkagePairORM(
+                        pair_id=str(_uuid.uuid4()),
+                        canonical_id_a=a, canonical_id_b=b,
+                        raw_score=1.0 if same_group else 0.0,
+                        calibrated_probability=1.0 if same_group else 0.0,
+                        deterministic_tier_fired=False,
+                        deterministic_result=None,
+                        feature_vector={},
+                        shap_contributions={},
+                        shared_blocks=[],
+                        scored_at=now,
+                    )
+                    db.add(pair)
+                    db.flush()
+
+                # Constraint (idempotent — replaces opposite if it existed)
+                existing_c = db.execute(
+                    select(LinkageConstraintORM).where(
+                        LinkageConstraintORM.canonical_id_a == a,
+                        LinkageConstraintORM.canonical_id_b == b,
+                    )
+                ).scalar_one_or_none()
+                if existing_c:
+                    if existing_c.constraint_type != ctype:
+                        existing_c.constraint_type = ctype
+                        existing_c.created_by = body.reviewer_id
+                        existing_c.notes = body.notes
+                else:
+                    db.add(LinkageConstraintORM(
+                        constraint_id=str(_uuid.uuid4()),
+                        canonical_id_a=a, canonical_id_b=b,
+                        constraint_type=ctype,
+                        created_by=body.reviewer_id,
+                        created_at=now,
+                        notes=body.notes,
+                    ))
+                if same_group:
+                    must_links_added += 1
+                else:
+                    cannot_links_added += 1
+
+                # Training label (idempotent)
+                existing_l = db.execute(
+                    select(TrainingLabelORM).where(
+                        TrainingLabelORM.canonical_id_a == a,
+                        TrainingLabelORM.canonical_id_b == b,
+                    )
+                ).scalar_one_or_none()
+                if existing_l:
+                    existing_l.is_match = same_group
+                else:
+                    db.add(TrainingLabelORM(
+                        label_id=str(_uuid.uuid4()),
+                        canonical_id_a=a, canonical_id_b=b,
+                        is_match=same_group,
+                        source="reviewer_regroup",
+                        created_at=now,
+                    ))
+
+                # Reviewer decision row for the audit trail
+                db.add(ReviewerDecisionORM(
+                    decision_id=str(_uuid.uuid4()),
+                    queue_id=None,
+                    pair_id=str(pair.pair_id),
+                    canonical_id_a=a, canonical_id_b=b,
+                    decision="confirm_match" if same_group else "reject",
+                    reviewer_id=body.reviewer_id,
+                    reviewer_tier=body.reviewer_tier,
+                    notes=body.notes or "regroup",
+                    decided_at=now,
+                    is_training_label=True,
+                ))
+                decisions_logged += 1
+
+        # Invalidate verdict caches for every affected UBID
+        for u in set(cid_to_target.values()):
+            redis_cache.invalidate_verdict(u)
+
+    # Refresh DuckDB events to point at new UBIDs (best-effort, in-process)
+    try:
+        import pandas as _pd
+        from sqlalchemy import text as _text
+        from ubid.storage.duckdb_warehouse import get_conn as _get_conn
+
+        with get_db() as db:
+            rows = db.execute(_text("""
+                SELECT cr.source_system, cr.source_record_id, usl.ubid
+                FROM canonical_records cr
+                JOIN ubid_source_links usl ON usl.canonical_id = cr.canonical_id
+            """)).fetchall()
+        mapping_df = _pd.DataFrame(
+            [(s, r, str(u)) for s, r, u in rows],
+            columns=["source_system", "source_record_id", "ubid"],
+        )
+        conn = _get_conn()
+        conn.register("ubid_mapping_df", mapping_df)
+        conn.execute("DROP TABLE IF EXISTS events_new")
+        conn.execute("""
+            CREATE TABLE events_new AS
+            SELECT e.event_id, m.ubid AS ubid, e.canonical_id, e.source_system,
+                   e.source_record_id, e.event_type, e.event_date,
+                   e.ingested_at, e.metadata
+            FROM events e LEFT JOIN ubid_mapping_df m
+              ON m.source_system = e.source_system
+             AND m.source_record_id = e.source_record_id
+        """)
+        conn.execute("DROP TABLE events")
+        conn.execute("ALTER TABLE events_new RENAME TO events")
+        conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_events_pk ON events(event_id)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_events_ubid ON events(ubid)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_events_date ON events(event_date)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_events_type ON events(event_type)")
+        conn.unregister("ubid_mapping_df")
+    except Exception as e:
+        logger.warning("DuckDB event-remapping skipped after regroup: %s", e)
+
+    return {
+        "status": "regrouped",
+        "source_ubid": body.ubid,
+        "n_groups": len(groups),
+        "new_ubids_created": new_ubids_created,
+        "records_moved": moved_count,
+        "must_links_added": must_links_added,
+        "cannot_links_added": cannot_links_added,
+        "decisions_logged": decisions_logged,
+        "training_labels_written": decisions_logged,
+        "feeds_next_retrain": True,
+    }
+
+
 @router.post("/synonyms")
 def add_locality_synonym(body: SynonymRequest):
     """Add a locality synonym discovered during review."""

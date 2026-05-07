@@ -175,6 +175,35 @@ services:
       kafka:
         condition: service_healthy
 
+  # ── Self-hosted Nominatim (OPTIONAL — uncomment to enable full geocoding) ────
+  # The platform geocodes addresses via:
+  #   1. data/dictionaries/locality_coordinates.json (~70 entries, instant)
+  #   2. Nominatim (this service) for addresses not in the dictionary.
+  #
+  # To enable Nominatim:
+  #   1. Download a Karnataka or India OSM extract:
+  #        https://download.geofabrik.de/asia/india/karnataka.html  (~250 MB)
+  #        https://download.geofabrik.de/asia/india.html            (~5 GB)
+  #   2. Place the .osm.pbf file at ./nominatim_data/karnataka-latest.osm.pbf
+  #   3. Uncomment the block below.
+  #   4. Set NOMINATIM_URL=http://nominatim:8080 in .env
+  #   5. docker compose up -d nominatim ubid-api
+  # First-time import takes ~10-30 minutes depending on the extract size.
+  #
+  nominatim:
+    image: mediagis/nominatim:4.4
+    restart: unless-stopped
+    environment:
+      PBF_PATH: /nominatim/data/karnataka-latest.osm.pbf
+      IMPORT_WIKIPEDIA: "false"
+      NOMINATIM_PASSWORD: ubid_nominatim_secret
+    volumes:
+      - ./nominatim_data:/nominatim/data
+      - nominatim_db:/var/lib/postgresql/14/main
+    ports:
+      - "8090:8080"
+    shm_size: 1gb
+
   # ── Reviewer Console (Streamlit) ──────────────────────────────────────────────
   ubid-frontend:
     build: .
@@ -198,3 +227,4 @@ volumes:
   neo4j_data:
   neo4j_logs:
   kafka_data:
+  nominatim_db:

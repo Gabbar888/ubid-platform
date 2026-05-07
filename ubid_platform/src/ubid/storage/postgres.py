@@ -242,6 +242,33 @@ class TrainingLabelORM(Base):
     __table_args__ = (UniqueConstraint("canonical_id_a", "canonical_id_b"),)
 
 
+class RetrainRunORM(Base):
+    """One row per `/admin/retrain` invocation. Used to compute label budgets
+    ('labels added since last retrain') and to render the retrain-history
+    chart so users can see the model improving (or regressing) over time."""
+    __tablename__ = "retrain_runs"
+
+    run_id = Column(UUID(as_uuid=False), primary_key=True)
+    started_at = Column(DateTime(timezone=True), nullable=False, index=True)
+    finished_at = Column(DateTime(timezone=True))
+    duration_seconds = Column(Float)
+    n_reviewer_labels = Column(Integer, nullable=False, default=0)
+    n_ground_truth_pairs = Column(Integer, nullable=False, default=0)
+    n_total_pairs = Column(Integer, nullable=False, default=0)
+    pre_brier = Column(Float)
+    pre_ece = Column(Float)
+    pre_f1 = Column(Float)
+    pre_precision = Column(Float)
+    pre_recall = Column(Float)
+    post_brier = Column(Float)
+    post_ece = Column(Float)
+    post_f1 = Column(Float)
+    post_precision = Column(Float)
+    post_recall = Column(Float)
+    triggered_by = Column(Text, default="manual")
+    notes = Column(Text)
+
+
 # ── Engine and session factory ────────────────────────────────────────────────
 
 _engine = None
