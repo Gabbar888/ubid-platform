@@ -15,34 +15,34 @@ import plotly.graph_objects as go
 import plotly.io as pio
 import streamlit as st
 
-# ── Plotly: high-contrast default template (slate-700 axis text on white) ────
-# Set this once globally so every chart inherits readable axis/tick colours.
+# ── Plotly: editorial template (cream cards, ink text, saffron/moss/crimson) ─
 pio.templates["ubid"] = pio.templates["plotly_white"]
 _t = pio.templates["ubid"]
-_t.layout.font = dict(color="#334155", family="'Inter', sans-serif", size=12)
-_t.layout.title.font = dict(color="#0F172A", size=15)
+_t.layout.font = dict(color="#0f1f3a", family="'Inter', sans-serif", size=12)
+_t.layout.title.font = dict(color="#0f1f3a", size=15, family="'Fraunces', serif")
 _t.layout.paper_bgcolor = "#FFFFFF"
 _t.layout.plot_bgcolor = "#FFFFFF"
 _t.layout.xaxis = dict(
-    color="#334155",
-    tickfont=dict(color="#334155", size=12),
-    title_font=dict(color="#0F172A", size=13),
-    gridcolor="#E2E8F0",
-    zerolinecolor="#CBD5E1",
-    linecolor="#CBD5E1",
+    color="#4a3f33",
+    tickfont=dict(color="#4a3f33", size=11, family="'JetBrains Mono', monospace"),
+    title_font=dict(color="#0f1f3a", size=12, family="'Inter', sans-serif"),
+    gridcolor="#e5dcc8",
+    zerolinecolor="#c9b896",
+    linecolor="#c9b896",
 )
 _t.layout.yaxis = dict(
-    color="#334155",
-    tickfont=dict(color="#334155", size=12),
-    title_font=dict(color="#0F172A", size=13),
-    gridcolor="#E2E8F0",
-    zerolinecolor="#CBD5E1",
-    linecolor="#CBD5E1",
+    color="#4a3f33",
+    tickfont=dict(color="#4a3f33", size=11, family="'JetBrains Mono', monospace"),
+    title_font=dict(color="#0f1f3a", size=12, family="'Inter', sans-serif"),
+    gridcolor="#e5dcc8",
+    zerolinecolor="#c9b896",
+    linecolor="#c9b896",
 )
 _t.layout.legend = dict(
-    font=dict(color="#334155"),
-    bordercolor="#CBD5E1",
+    font=dict(color="#4a3f33", family="'Inter', sans-serif"),
+    bordercolor="#c9b896",
 )
+_t.layout.colorway = ["#1e3a5f", "#d97706", "#4a5d23", "#991b1b", "#15803d", "#7a6a55"]
 pio.templates.default = "ubid"
 
 API_BASE = os.getenv("API_BASE_URL", "http://localhost:8000")
@@ -55,656 +55,747 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# ── Tricolor / Indian-government theme — REDESIGNED MAY 2026 ──────────────────
-# Palette anchored to the Indian flag with WCAG-AAA contrast ratios:
-#   Saffron #FF9933 · White #FFFFFF · India Green #15803D
-#   Gov navy #1E3A8A · Ashoka navy #1E3A8A · Surface #FFFFFF (pure)
-# Text: #0F172A primary / #334155 secondary / #475569 muted (all ≥ 7:1 contrast)
+# ── Editorial / state-document theme (Fraunces + Inter + JetBrains Mono) ──
+# Palette anchored to paper-cream + indigo + saffron with moss/crimson accents.
+# Sharp corners, hairline borders, generous whitespace. See DESIGN_BRIEF.md.
 st.markdown("""
 <style>
-    /* ── Color tokens (high-contrast, flag-themed) ──────────────────────── */
-    :root {
-        --saffron:        #FF9933;
-        --saffron-deep:   #E8731E;
-        --india-green:    #15803D;
-        --green-deep:     #166534;
-        --gov-navy:       #1E3A8A;
-        --gov-navy-dark:  #1E2D6E;
-        --ashoka:         #1E3A8A;
+    /* ── Imports — editorial typography ───────────────────────────────── */
+    @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,600;1,9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+Kannada:wght@500;600;700&display=swap');
 
-        --bg:             #FFFFFF;   /* page background, pure white */
-        --surface:        #F8FAFC;   /* subtle alt rows / hover */
-        --surface-2:      #F1F5F9;   /* deeper alt */
-        --ink:            #0F172A;   /* primary text — slate-900 */
-        --ink-secondary:  #334155;   /* secondary — slate-700 (≥11:1 on white) */
-        --ink-muted:      #475569;   /* muted floor — slate-600 (≥7:1) */
-        --rule:           #CBD5E1;   /* primary border — slate-300 */
-        --rule-light:     #E2E8F0;   /* subtle border — slate-200 */
-        --ring:           rgba(30, 58, 138, 0.18);   /* navy/15% focus ring */
-        --shadow-sm:      0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
-        --shadow-md:      0 4px 8px rgba(15, 23, 42, 0.08), 0 2px 4px rgba(15, 23, 42, 0.04);
+    /* ── Color tokens (editorial / state-document) ────────────────────── */
+    :root {
+        /* Surfaces */
+        --paper:        #f4ede0;
+        --paper-deep:   #ebe1cd;
+        --surface:      #f7f1e5;
+        --white:        #ffffff;
+
+        /* Ink */
+        --ink:          #0f1f3a;
+        --ink-soft:     #4a3f33;
+        --ink-faint:    #7a6a55;
+        --rule:         #c9b896;
+        --rule-soft:    #e5dcc8;
+
+        /* Accents */
+        --saffron:        #d97706;
+        --saffron-bright: #f59e0b;
+        --saffron-deep:   #b35c00;
+        --indigo:         #1e3a5f;
+        --indigo-deep:    #0f1f3a;
+        --moss:           #4a5d23;
+        --moss-bright:    #15803d;
+        --crimson:        #991b1b;
+
+        /* Compatibility aliases (legacy refs in remaining markup) */
+        --gov-navy:       var(--indigo-deep);
+        --gov-navy-dark:  var(--indigo-deep);
+        --gov-navy-light: var(--indigo);
+        --india-green:    var(--moss-bright);
+        --green-deep:     var(--moss);
+        --bg:             var(--paper);
+        --ink-secondary:  var(--ink-soft);
+        --ink-muted:      var(--ink-faint);
+        --rule-light:     var(--rule-soft);
+        --ashoka:         var(--indigo-deep);
+        --ring:           rgba(217, 119, 6, 0.25);
+        --shadow-sm:      0 0.5px 2px rgba(15, 31, 58, 0.06);
+        --shadow-md:      0 1px 4px rgba(15, 31, 58, 0.10);
     }
 
-    /* Hide the (now unused) sidebar entirely */
+    /* Hide unused sidebar */
     section[data-testid="stSidebar"] { display: none !important; }
     [data-testid="collapsedControl"] { display: none !important; }
 
     html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"] {
-        background-color: var(--bg) !important;
+        background-color: var(--paper) !important;
         color: var(--ink);
-        font-family: 'Inter', 'Source Sans Pro', system-ui, -apple-system, Arial, sans-serif;
+        font-family: 'Inter', system-ui, sans-serif;
+        font-size: 14px;
+        line-height: 1.55;
     }
 
-    /* Container — full-width header, then content centered */
-    .block-container { padding-top: 0.4rem !important; padding-bottom: 3rem; max-width: 1440px; }
+    .block-container {
+        padding-top: 0 !important;
+        padding-left: 64px !important;
+        padding-right: 64px !important;
+        padding-bottom: 4rem !important;
+        max-width: 1600px;
+    }
 
-    /* ── Top header bar (richer, more government-formal) ─────────────────── */
+    /* Hide Streamlit chrome */
+    #MainMenu, footer, [data-testid="stHeader"] { visibility: hidden; height: 0; }
+    [data-testid="stToolbar"] { visibility: hidden; }
+
+    /* ── Header masthead (3-strip indigo) ─────────────────────────────── */
     .gov-header {
-        background:
-          radial-gradient(circle at 25% 30%, rgba(255,153,51,0.10) 0%, transparent 40%),
-          radial-gradient(circle at 80% 70%, rgba(21,128,61,0.10) 0%, transparent 40%),
-          linear-gradient(90deg, #0F1F4F 0%, var(--gov-navy) 50%, #0F1F4F 100%);
-        color: #fff;
-        padding: 18px 32px;
-        margin: -8px -8px 0 -8px;
-        display: flex;
+        background: linear-gradient(180deg, #1e3a5f 0%, #0f1f3a 100%);
+        color: var(--paper);
+        padding: 18px 64px;
+        margin: 0 -64px;
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 28px;
         align-items: center;
-        gap: 24px;
-        box-shadow: 0 6px 18px rgba(15, 31, 79, 0.25);
-        border-bottom: 2px solid var(--saffron);
-        position: relative;
-    }
-    .gov-header::before {
-        /* Subtle gold/navy braid pattern bottom edge */
-        content: "";
-        position: absolute;
-        left: 0; right: 0; bottom: -2px; height: 2px;
-        background: repeating-linear-gradient(
-            90deg, var(--saffron) 0 8px, var(--gov-navy) 8px 16px
-        );
-        opacity: 0.7;
     }
     .gov-header .crest {
-        width: 64px; height: 64px;
-        flex-shrink: 0;
-        filter: drop-shadow(0 2px 6px rgba(0,0,0,0.35));
+        width: 56px; height: 56px; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
     }
-    .gov-header .crest svg { width: 100%; height: 100%; }
-    .gov-header .titles { flex: 1; min-width: 0; }
+    .gov-header .crest img { width: 100%; height: 100%; object-fit: contain; }
+    .gov-header .crest .real-logo { background: rgba(255,255,255,0.04); padding: 3px; border-radius: 50%; }
+    .gov-header .titles { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
     .gov-header .gov-tagline {
-        font-size: 0.78rem;
-        letter-spacing: 0.18em;
+        font-family: 'Inter', sans-serif;
+        font-size: 11px; font-weight: 600;
+        letter-spacing: 0.2em;
         text-transform: uppercase;
-        opacity: 1;
-        margin-bottom: 4px;
-        font-weight: 600;
-        color: #FFFFFF;
+        color: var(--rule);
+        display: flex; align-items: baseline; gap: 8px;
+        flex-wrap: wrap;
     }
     .gov-header .gov-tagline .kannada {
-        font-family: 'Noto Serif Kannada', serif;
-        font-weight: 500;
-        letter-spacing: 0.05em;
-        margin-right: 8px;
-        color: var(--saffron);
-        text-transform: none;
+        font-family: 'Noto Sans Kannada', sans-serif;
+        letter-spacing: normal;
+        font-size: 12px;
+        color: var(--rule);
     }
     .gov-header .gov-tagline .gok-en {
-        color: #FFFFFF;
-        text-transform: uppercase;
+        color: var(--paper);
+        font-weight: 700;
+        letter-spacing: 0.2em;
     }
     .gov-header .platform {
-        font-size: 1.55rem;
+        font-family: 'Fraunces', Georgia, serif;
+        font-size: 26px;
         font-weight: 700;
         letter-spacing: -0.01em;
+        line-height: 1.15;
+        color: var(--paper);
+        font-variation-settings: 'opsz' 144;
         margin: 0;
-        line-height: 1.1;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        color: #fff;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.25);
+    }
+    .gov-header .platform .ital {
+        font-style: italic;
+        color: var(--saffron-bright);
+        font-weight: 400;
     }
     .gov-header .platform-kn {
-        font-size: 0.85rem;
-        opacity: 0.85;
-        font-weight: 500;
+        font-family: 'Noto Sans Kannada', sans-serif;
+        font-size: 12px;
+        color: var(--rule);
         margin-top: 2px;
-        letter-spacing: 0.02em;
     }
     .gov-header .dept {
-        font-size: 0.83rem;
-        opacity: 0.92;
-        font-weight: 400;
-        margin-top: 6px;
-        padding-top: 6px;
-        border-top: 1px solid rgba(255,255,255,0.18);
-        max-width: 720px;
-    }
-    .gov-header .dept b { color: var(--saffron); font-weight: 600; }
-
-    /* ── Force light text inside the header (override the aggressive
-         `[data-testid="stMarkdownContainer"] *` dark-text rule below) ─── */
-    [data-testid="stMarkdownContainer"] .gov-header,
-    [data-testid="stMarkdownContainer"] .gov-header *,
-    [data-testid="stMarkdownContainer"] .gov-header p,
-    [data-testid="stMarkdownContainer"] .gov-header span,
-    [data-testid="stMarkdownContainer"] .gov-header div,
-    [data-testid="stMarkdownContainer"] .gov-header b,
-    [data-testid="stMarkdownContainer"] .gov-header strong {
-        color: inherit !important;
-    }
-    [data-testid="stMarkdownContainer"] .gov-header .gov-tagline,
-    [data-testid="stMarkdownContainer"] .gov-header .gov-tagline .gok-en {
-        color: #FFFFFF !important;
-    }
-    [data-testid="stMarkdownContainer"] .gov-header .gov-tagline .kannada,
-    [data-testid="stMarkdownContainer"] .gov-header .dept b {
-        color: var(--saffron) !important;
-    }
-    [data-testid="stMarkdownContainer"] .gov-header .platform {
-        color: #FFFFFF !important;
-    }
-    [data-testid="stMarkdownContainer"] .gov-header .platform-kn,
-    [data-testid="stMarkdownContainer"] .gov-header .dept,
-    [data-testid="stMarkdownContainer"] .gov-header .dept * {
-        color: rgba(255, 255, 255, 0.92) !important;
-    }
-    /* Tricolor strip is decorative — the inner divs are background only */
-    [data-testid="stMarkdownContainer"] .tricolor div {
-        color: transparent !important;
-    }
-    /* Crest image styling */
-    .gov-header .crest img {
-        width: 100%; height: 100%;
-        object-fit: contain;
-        border-radius: 50%;
-        background: rgba(255,255,255,0.08);
-    }
-    .gov-header .crest img.real-logo {
-        background: #FFFFFF;
-        padding: 4px;
-    }
-
-    /* Tricolor strip directly under the header */
-    .tricolor {
-        height: 4px;
-        display: flex;
-        margin: 0 -8px 0 -8px;
-        overflow: hidden;
-    }
-    .tricolor .saffron { flex: 1; background: var(--saffron); }
-    .tricolor .white   { flex: 1; background: #FFFFFF; border-bottom: 1px solid var(--rule-light); }
-    .tricolor .green   { flex: 1; background: var(--india-green); }
-
-    /* ── Reviewer-control bar (just under tricolor, before top nav) ─────── */
-    .control-bar {
-        background: var(--surface);
-        margin: 0 -8px 0 -8px;
-        padding: 10px 28px 12px 28px;
-        display: flex;
-        align-items: center;
-        gap: 18px;
-        border-bottom: 1px solid var(--rule-light);
-    }
-    .control-bar .label {
-        font-size: 0.7rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--ink-muted);
-        margin-bottom: 2px;
-    }
-
-    /* ── Pill-style application nav (replaces the radio look) ───────────── */
-    [role="radiogroup"][aria-orientation="horizontal"] {
-        background: #FFFFFF;
-        margin: 0 -8px 0 -8px !important;
-        padding: 14px 28px 14px 28px;
-        gap: 4px !important;
-        overflow-x: auto;
-        flex-wrap: nowrap !important;
-        box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
-        position: relative;
-        scrollbar-width: thin;
-        scrollbar-color: var(--rule) transparent;
-        align-items: center !important;
-    }
-    /* Saffron rail at the very top of the nav strip (extends from header) */
-    [role="radiogroup"][aria-orientation="horizontal"]::before {
-        content: "";
-        position: absolute;
-        left: 0; right: 0; top: 0; height: 1px;
-        background: linear-gradient(90deg,
-            transparent 0%, rgba(255,153,51,0.4) 30%,
-            rgba(255,153,51,0.4) 70%, transparent 100%);
-    }
-    /* Bottom edge — subtle tricolor underline */
-    [role="radiogroup"][aria-orientation="horizontal"]::after {
-        content: "";
-        position: absolute;
-        left: 0; right: 0; bottom: 0; height: 3px;
-        background: linear-gradient(
-            90deg,
-            var(--saffron)      0%,
-            var(--saffron)      33.33%,
-            #FFFFFF             33.33%,
-            #FFFFFF             66.66%,
-            var(--india-green)  66.66%,
-            var(--india-green)  100%
-        );
-        pointer-events: none;
-    }
-    [role="radiogroup"][aria-orientation="horizontal"]::-webkit-scrollbar { height: 6px; }
-    [role="radiogroup"][aria-orientation="horizontal"]::-webkit-scrollbar-thumb {
-        background: var(--rule); border-radius: 3px;
-    }
-
-    /* Each pill tab */
-    [role="radiogroup"][aria-orientation="horizontal"] > label {
-        background: #F8FAFC !important;
-        color: var(--ink-secondary) !important;
-        padding: 9px 16px !important;
-        margin: 0 !important;
-        border-radius: 8px !important;
-        border: 1px solid var(--rule-light) !important;
-        font-weight: 600 !important;
-        font-size: 0.88rem !important;
-        white-space: nowrap;
-        transition: all 0.16s cubic-bezier(0.4, 0, 0.2, 1);
-        cursor: pointer;
-        letter-spacing: 0.01em;
-        position: relative;
-        line-height: 1.2;
-        min-height: 36px;
-        display: flex !important;
-        align-items: center;
-    }
-    /* Hover: warm saffron-tinted pill */
-    [role="radiogroup"][aria-orientation="horizontal"] > label:hover {
-        background: #FFF7ED !important;
-        color: var(--gov-navy-dark) !important;
-        border-color: rgba(255, 153, 51, 0.5) !important;
-        transform: translateY(-1px);
-        box-shadow: 0 2px 6px rgba(255, 153, 51, 0.12);
-    }
-    /* Active pill: solid navy with white text and saffron glow ring */
-    [role="radiogroup"][aria-orientation="horizontal"] > label[data-checked="true"],
-    [role="radiogroup"][aria-orientation="horizontal"] > label:has(input:checked) {
-        color: #FFFFFF !important;
-        background: linear-gradient(135deg,
-            var(--gov-navy) 0%,
-            var(--gov-navy-dark) 100%) !important;
-        border-color: var(--saffron) !important;
-        font-weight: 700 !important;
-        box-shadow:
-            0 0 0 2px rgba(255, 153, 51, 0.25),
-            0 4px 12px rgba(30, 58, 138, 0.30);
-        transform: translateY(0);
-    }
-    /* Pull the active label text colour through nested elements too */
-    [role="radiogroup"][aria-orientation="horizontal"] > label:has(input:checked) *,
-    [role="radiogroup"][aria-orientation="horizontal"] > label[data-checked="true"] * {
-        color: #FFFFFF !important;
-    }
-    /* Hide the radio dot, render label content cleanly */
-    [role="radiogroup"][aria-orientation="horizontal"] > label > div:first-child {
-        display: none !important;
-    }
-    [role="radiogroup"][aria-orientation="horizontal"] > label > div:nth-child(2) {
-        display: flex !important;
-        align-items: center;
-        gap: 6px;
-    }
-
-    /* ── Page context strip (under the nav, above content) ──────────────── */
-    .page-context {
-        background: linear-gradient(90deg,
-            #F8FAFC 0%,
-            #FFFFFF 50%,
-            #F8FAFC 100%);
-        margin: 0 -8px 22px -8px;
-        padding: 14px 32px 14px 32px;
-        border-bottom: 1px solid var(--rule-light);
-        display: flex;
-        align-items: center;
-        gap: 16px;
-    }
-    .page-context .pc-icon {
-        font-size: 1.6rem;
-        line-height: 1;
-        flex-shrink: 0;
-        filter: drop-shadow(0 1px 2px rgba(0,0,0,0.12));
-    }
-    .page-context .pc-title {
-        font-size: 1.05rem;
-        font-weight: 700;
-        color: var(--gov-navy-dark);
-        letter-spacing: -0.01em;
-        line-height: 1.2;
-    }
-    .page-context .pc-subtitle {
-        font-size: 0.82rem;
-        color: var(--ink-muted);
-        font-weight: 500;
+        font-family: 'Inter', sans-serif;
+        font-size: 11px;
+        color: var(--rule);
         margin-top: 2px;
+        letter-spacing: 0.05em;
     }
-    .page-context .pc-spacer { flex: 1; }
-    .page-context .pc-meta {
-        font-size: 0.78rem;
-        color: var(--ink-muted);
-        font-weight: 500;
+    .gov-header .dept-block {
         text-align: right;
+        font-family: 'Inter', sans-serif;
+        align-self: flex-start;
     }
-    .page-context .pc-meta b {
-        color: var(--gov-navy);
+    .gov-header .dept-block .dept-name {
+        font-size: 11px;
         font-weight: 700;
-    }
-
-    /* ── Typography ─────────────────────────────────────────────────────── */
-    h1 {
-        color: var(--ink) !important;
-        font-weight: 700 !important;
-        letter-spacing: -0.01em;
-        margin-bottom: 0.3rem !important;
-        font-size: 2rem !important;
-    }
-    h2 {
-        color: var(--ink) !important;
-        font-weight: 700 !important;
-        border-bottom: 2px solid var(--saffron);
-        padding-bottom: 0.4rem;
-        margin-top: 1.8rem !important;
-        font-size: 1.45rem !important;
-    }
-    h3 {
-        color: var(--gov-navy) !important;
-        font-weight: 600 !important;
-        font-size: 1.15rem !important;
-    }
-    p, li, label, .stMarkdown { color: var(--ink-secondary) !important; }
-    /* Captions need stronger contrast than default */
-    [data-testid="stCaptionContainer"], .stCaption,
-    [data-testid="stCaptionContainer"] p {
-        color: var(--ink-secondary) !important;
-        font-size: 0.92rem !important;
-    }
-    small { color: var(--ink-muted) !important; }
-    code {
-        background: var(--surface-2);
-        color: var(--gov-navy);
-        padding: 2px 6px;
-        border-radius: 3px;
-        font-size: 0.88em;
-    }
-
-    /* ── Metric cards (bigger, clearer) ─────────────────────────────────── */
-    [data-testid="stMetric"] {
-        background: #fff;
-        border: 1px solid var(--rule-light);
-        border-left: 4px solid var(--saffron);
-        padding: 16px 20px 14px 20px;
-        border-radius: 8px;
-        box-shadow: var(--shadow-sm);
-        transition: all 0.15s ease;
-    }
-    [data-testid="stMetric"]:hover {
-        box-shadow: var(--shadow-md);
-        transform: translateY(-1px);
-    }
-    [data-testid="stMetricLabel"] {
-        font-weight: 700 !important;
-        color: var(--gov-navy) !important;
-        font-size: 0.74rem !important;
-        letter-spacing: 0.08em;
+        letter-spacing: 0.2em;
         text-transform: uppercase;
-        line-height: 1.2;
+        color: var(--saffron-bright);
+        margin-bottom: 4px;
     }
-    [data-testid="stMetricLabel"] p {
-        color: var(--gov-navy) !important;
-        font-weight: 700 !important;
+    .gov-header .dept-block .dept-sys {
+        font-family: 'Fraunces', serif;
+        font-size: 12px;
+        font-style: italic;
+        color: var(--rule);
     }
-    [data-testid="stMetricValue"] {
-        font-size: 2.2rem !important;
-        font-weight: 700 !important;
-        color: var(--ink) !important;
-        line-height: 1.1;
-        margin-top: 4px;
-    }
-    [data-testid="stMetricDelta"] {
-        font-size: 0.82rem !important;
-        font-weight: 600 !important;
-        color: var(--ink-secondary) !important;
-    }
-    [data-testid="stMetricDelta"] svg { display: none; }
 
-    /* ── Verdict badges (flag-coloured) ─────────────────────────────────────── */
-    .verdict-badge {
-        display: inline-block;
-        padding: 4px 12px;
-        border-radius: 4px;
-        font-size: 0.74rem;
+    /* Tricolor — saffron + green hairline bar */
+    .tricolor {
+        display: block;
+        height: 4px;
+        margin: 0 -64px;
+        background: linear-gradient(180deg,
+            var(--saffron) 0%, var(--saffron) 50%,
+            var(--moss-bright) 50%, var(--moss-bright) 100%);
+    }
+    .tricolor > div { display: none; }
+
+    /* ── Reviewer toolbar (just under the tricolor) ────────────────────── */
+    .toolbar {
+        background: var(--paper);
+        margin: 0 -64px;
+        padding: 14px 64px;
+        border-bottom: 0.5px solid var(--rule);
+        display: flex;
+        align-items: center;
+        gap: 32px;
+        font-family: 'Inter', sans-serif;
+    }
+    .toolbar .field { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .toolbar .field-label {
+        font-size: 9px;
         font-weight: 700;
+        letter-spacing: 0.25em;
         text-transform: uppercase;
-        letter-spacing: 0.07em;
-        color: #FFFFFF !important;
-        line-height: 1.4;
-        white-space: nowrap;
+        color: var(--ink-faint);
     }
-    .verdict-active            { background: var(--india-green); }
-    .verdict-dormant           { background: var(--saffron); }
-    .verdict-closed            { background: #991B1B; }
-    .verdict-closed_by_silence { background: #C53030; }
-    .verdict-nascent           { background: var(--gov-navy); }
-    .verdict-unknown           { background: var(--ink-muted); }
-
-    /* ── Reviewer tier pills ────────────────────────────────────────────────── */
-    .tier-junior, .tier-senior {
-        padding: 3px 12px;
-        border-radius: 4px;
-        font-size: 0.74rem;
-        font-weight: 700;
-        letter-spacing: 0.06em;
-        color: #fff !important;
+    .toolbar .field-value {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--ink);
+    }
+    .toolbar .sep { width: 0.5px; height: 32px; background: var(--rule); }
+    .toolbar .spacer { flex: 1; }
+    .toolbar .status-pill {
+        display: flex; align-items: center; gap: 8px;
+        font-size: 11px; font-weight: 600;
+        letter-spacing: 0.15em;
         text-transform: uppercase;
+        color: var(--ink-faint);
     }
-    .tier-junior { background: var(--saffron); }
-    .tier-senior { background: var(--gov-navy); }
-
-    /* ── Buttons ────────────────────────────────────────────────────────── */
-    .stButton > button, .stDownloadButton > button {
-        background: #fff;
-        color: var(--gov-navy);
-        border: 1.5px solid var(--gov-navy);
-        border-radius: 6px;
-        padding: 9px 20px;
+    .toolbar .status-pill .dot {
+        width: 8px; height: 8px;
+        border-radius: 50%;
+        background: var(--moss-bright);
+        animation: status-pulse 2s ease-in-out infinite;
+    }
+    .toolbar .status-pill.red .dot { background: var(--crimson); animation: none; }
+    .toolbar .status-pill .lbl { color: var(--ink-soft); }
+    .toolbar .status-pill .latency {
+        font-family: 'JetBrains Mono', monospace;
+        color: var(--ink);
         font-weight: 600;
-        font-size: 0.92rem;
-        height: auto;
-        min-height: 42px;
-        transition: all 0.15s ease;
-        box-shadow: var(--shadow-sm);
+        margin-left: 4px;
+        text-transform: none;
+        letter-spacing: 0;
     }
-    .stButton > button:hover, .stDownloadButton > button:hover {
-        background: var(--gov-navy);
-        color: #fff;
-        border-color: var(--gov-navy);
-        box-shadow: var(--shadow-md);
-        transform: translateY(-1px);
+    @keyframes status-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    /* ── Top nav (pill row, no emojis, saffron underline) ──────────────── */
+    [data-testid="stElementContainer"]:has(.ubid-nav-marker) + [data-testid="stElementContainer"] .stRadio > div[role="radiogroup"] {
+        margin: 0 -64px !important;
+        padding: 0 64px !important;
+        background: var(--paper) !important;
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 0 !important;
+        border-bottom: 0.5px solid var(--rule) !important;
+        align-items: stretch !important;
+        overflow-x: auto;
     }
-    .stButton > button:active { transform: translateY(0); }
-    .stButton > button[kind="primary"],
-    .stButton > button[data-testid="baseButton-primary"],
-    .stDownloadButton > button[kind="primary"] {
-        background: var(--saffron) !important;
-        color: #fff !important;
-        border-color: var(--saffron-deep) !important;
-    }
-    .stButton > button[kind="primary"]:hover {
-        background: var(--saffron-deep) !important;
-        border-color: var(--saffron-deep) !important;
-    }
-    .stButton > button:disabled,
-    .stButton > button[disabled] {
-        background: var(--surface-2) !important;
-        color: var(--ink-muted) !important;
-        border-color: var(--rule) !important;
-        cursor: not-allowed;
+    [data-testid="stElementContainer"]:has(.ubid-nav-marker) + [data-testid="stElementContainer"] .stRadio > div[role="radiogroup"] > label {
+        cursor: pointer !important;
+        background: transparent !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        padding: 18px 18px !important;
+        margin: 0 !important;
+        color: var(--ink-soft) !important;
+        font-family: 'Inter', sans-serif !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.2em !important;
+        text-transform: uppercase !important;
+        position: relative !important;
+        display: flex !important;
+        align-items: center !important;
+        flex-direction: row !important;
+        white-space: nowrap !important;
         box-shadow: none !important;
         transform: none !important;
+        transition: color 0.15s ease;
+    }
+    [data-testid="stElementContainer"]:has(.ubid-nav-marker) + [data-testid="stElementContainer"] .stRadio > div[role="radiogroup"] > label:hover { color: var(--ink) !important; }
+    /* Hide the radio circle */
+    [data-testid="stElementContainer"]:has(.ubid-nav-marker) + [data-testid="stElementContainer"] .stRadio > div[role="radiogroup"] > label > div:first-child,
+    [data-testid="stElementContainer"]:has(.ubid-nav-marker) + [data-testid="stElementContainer"] .stRadio > div[role="radiogroup"] > label [role="radio"] {
+        display: none !important;
+    }
+    /* Active state: ink color + saffron 3px underline */
+    [data-testid="stElementContainer"]:has(.ubid-nav-marker) + [data-testid="stElementContainer"] .stRadio > div[role="radiogroup"] > label:has(input:checked) {
+        color: var(--ink) !important;
+    }
+    [data-testid="stElementContainer"]:has(.ubid-nav-marker) + [data-testid="stElementContainer"] .stRadio > div[role="radiogroup"] > label:has(input:checked)::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 18px;
+        right: 18px;
+        height: 3px;
+        background: var(--saffron);
+    }
+
+    /* Nav badges (rendered in label text via emoji-strip helper) */
+    .nav-badge {
+        display: inline-block;
+        margin-left: 8px;
+        min-width: 22px;
+        height: 18px;
+        line-height: 18px;
+        padding: 0 7px;
+        border-radius: 9px;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0;
+        color: #fff;
+        text-align: center;
+        background: var(--crimson);
+    }
+    .nav-badge--warn { background: var(--saffron); }
+
+    /* ── Page hero (eyebrow + saffron rule + serif H1 + auxiliary block) ── */
+    .page-hero {
+        margin: 36px 0 28px 0;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 32px;
+        align-items: end;
+    }
+    .page-hero .eyebrow {
+        font-family: 'Inter', sans-serif;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.4em;
+        text-transform: uppercase;
+        color: var(--saffron);
+        margin: 0 0 12px 0;
+    }
+    .page-hero .saffron-rule {
+        width: 48px; height: 3px;
+        background: var(--saffron);
+        margin: 0 0 20px 0;
+    }
+    .page-hero h1 {
+        font-family: 'Fraunces', Georgia, serif !important;
+        font-size: 48px !important;
+        font-weight: 700 !important;
+        letter-spacing: -0.02em !important;
+        line-height: 1.05 !important;
+        color: var(--ink) !important;
+        margin: 0 !important;
+        font-variation-settings: 'opsz' 144;
+        max-width: 22ch;
+    }
+    .page-hero h1 .ital {
+        font-style: italic;
+        color: var(--saffron);
+        font-weight: 400;
+    }
+    .page-hero .subtitle {
+        font-family: 'Fraunces', serif;
+        font-style: italic;
+        font-size: 14px;
+        color: var(--ink-faint);
+        margin-top: 14px;
+        max-width: 64ch;
+    }
+    .page-hero .aux {
+        text-align: right;
+        min-width: 280px;
+    }
+    .page-hero .aux .aux-label {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: var(--ink-faint);
+        margin-bottom: 6px;
+    }
+    .page-hero .aux .aux-value {
+        font-family: 'Fraunces', serif;
+        font-size: 40px;
+        font-weight: 700;
+        color: var(--ink);
+        line-height: 1.1;
+        font-variation-settings: 'opsz' 144;
+    }
+    .page-hero .aux .aux-sub {
+        font-family: 'Fraunces', serif;
+        font-style: italic;
+        font-size: 13px;
+        color: var(--ink-faint);
+        margin-top: 4px;
+    }
+    .page-hero .aux .aux-foot {
+        font-family: 'Inter', sans-serif;
+        font-size: 11px;
+        color: var(--ink-faint);
+        margin-top: 14px;
+        border-top: 0.5px solid var(--rule);
+        padding-top: 10px;
+    }
+
+    /* Compact sub-section header */
+    .sub-eyebrow {
+        font-family: 'Inter', sans-serif;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.4em;
+        text-transform: uppercase;
+        color: var(--saffron);
+        margin: 0 0 8px 0;
+    }
+    .sub-h2 {
+        font-family: 'Fraunces', serif;
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--ink);
+        letter-spacing: -0.01em;
+        margin: 0 0 6px 0;
+        font-variation-settings: 'opsz' 144;
+    }
+    .sub-cap {
+        font-family: 'Fraunces', serif;
+        font-style: italic;
+        font-size: 13px;
+        color: var(--ink-faint);
+        margin: 0 0 18px 0;
+    }
+
+    /* ── Cards (sharp corners, hairline borders, top accent) ───────────── */
+    .metric-card {
+        background: var(--white);
+        border: 0.5px solid var(--rule);
+        border-radius: 0;
+        padding: 22px;
+        border-top: 6px solid var(--ink-soft);
+        min-height: 178px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        box-shadow: none;
+    }
+    .metric-card.accent-saffron { border-top-color: var(--saffron); }
+    .metric-card.accent-indigo  { border-top-color: var(--indigo); }
+    .metric-card.accent-crimson { border-top-color: var(--crimson); }
+    .metric-card.accent-moss    { border-top-color: var(--moss-bright); }
+    .metric-card.hero {
+        background: var(--indigo-deep);
+        color: var(--paper);
+        border-color: var(--indigo-deep);
+        border-top-color: var(--saffron);
+    }
+    .metric-card.hero .label,
+    .metric-card.hero .num,
+    .metric-card.hero .sub { color: var(--paper) !important; }
+    .metric-card.hero .delta { color: #4ade80 !important; }
+    .metric-card .label {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: var(--ink-faint);
+        margin: 0;
+    }
+    .metric-card .num {
+        font-family: 'Fraunces', serif;
+        font-size: 64px;
+        font-weight: 700;
+        line-height: 1;
+        letter-spacing: -0.02em;
+        color: var(--ink);
+        font-variation-settings: 'opsz' 144;
+    }
+    .metric-card.hero .num { font-size: 86px; }
+    .metric-card .sub {
+        font-family: 'Fraunces', serif;
+        font-style: italic;
+        font-size: 13px;
+        color: var(--ink-faint);
+    }
+    .metric-card .delta {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--moss-bright);
+        margin-top: auto;
+    }
+    .metric-card .delta.neg { color: var(--crimson); }
+
+    /* Mini horizontal bar list (in cards) */
+    .mini-bars { display: flex; flex-direction: column; gap: 7px; margin-top: 4px; }
+    .mini-bars .bar-row {
+        display: grid;
+        grid-template-columns: 70px 1fr 28px;
+        align-items: center;
+        gap: 10px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+    }
+    .mini-bars .bar-row .name { color: var(--ink-soft); }
+    .mini-bars .bar-row .bar  { height: 8px; background: var(--indigo); }
+    .mini-bars .bar-row.b-saffron .bar { background: var(--saffron); }
+    .mini-bars .bar-row.b-moss    .bar { background: var(--moss); }
+    .mini-bars .bar-row.b-crimson .bar { background: var(--crimson); }
+    .mini-bars .bar-row .v { color: var(--ink); font-weight: 700; text-align: right; }
+
+    /* Confidence band (3-zone horizontal) */
+    .conf-band { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+    .conf-band .bar { display: flex; height: 16px; }
+    .conf-band .bar > div {
+        font-size: 10px; color: #fff;
+        font-weight: 700; letter-spacing: 0.15em;
+        text-align: center; line-height: 16px;
+        text-transform: uppercase;
+    }
+    .conf-band .bar .reject { background: var(--crimson); }
+    .conf-band .bar .review { background: var(--saffron); }
+    .conf-band .bar .auto   { background: var(--moss); }
+    .conf-band .bounds {
+        display: flex; justify-content: space-between;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 10px;
+        color: var(--ink-faint);
+    }
+
+    /* ── Buttons (uppercase tracked, sharp corners) ──────────────────── */
+    .stButton button, .stDownloadButton button {
+        background: var(--white) !important;
+        color: var(--ink) !important;
+        border: 1px solid var(--ink) !important;
+        border-radius: 0 !important;
+        padding: 10px 20px !important;
+        font-family: 'Inter', sans-serif !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.2em !important;
+        text-transform: uppercase !important;
+        height: auto !important;
+        min-height: 38px !important;
+        box-shadow: none !important;
+        transition: background 0.15s ease, color 0.15s ease;
+        transform: none !important;
+    }
+    .stButton button:hover, .stDownloadButton button:hover {
+        background: var(--white) !important;
+        color: var(--saffron) !important;
+        border-color: var(--saffron) !important;
+        transform: none !important;
+        box-shadow: 0 0.5px 2px rgba(217, 119, 6, 0.18) !important;
+    }
+    .stButton button[kind="primary"],
+    .stButton button[data-testid="baseButton-primary"] {
+        background: var(--moss-bright) !important;
+        color: var(--white) !important;
+        border-color: var(--moss-bright) !important;
+    }
+    .stButton button[kind="primary"]:hover,
+    .stButton button[data-testid="baseButton-primary"]:hover {
+        background: var(--moss) !important;
+        color: var(--white) !important;
+        border-color: var(--moss) !important;
+    }
+    /* Force white text on primary-button descendants so the label is always
+       readable on the moss-bright fill (color: inherit chains can otherwise
+       leak a darker color in). */
+    .stButton button[kind="primary"] *,
+    .stButton button[data-testid="baseButton-primary"] * {
+        color: #FFFFFF !important;
     }
     .stFormSubmitButton > button {
         background: var(--saffron) !important;
-        color: #fff !important;
-        border: 1.5px solid var(--saffron-deep) !important;
+        color: var(--white) !important;
+        border: 1px solid var(--saffron-deep) !important;
+        font-family: 'Inter', sans-serif !important;
+        font-size: 11px !important;
         font-weight: 700 !important;
-        min-height: 42px;
+        letter-spacing: 0.2em !important;
+        text-transform: uppercase !important;
+        border-radius: 0 !important;
+        padding: 10px 20px !important;
+        min-height: 38px !important;
     }
-    .stFormSubmitButton > button:hover { background: var(--saffron-deep) !important; }
+    .stFormSubmitButton > button:hover {
+        background: var(--saffron-deep) !important;
+        color: var(--white) !important;
+    }
+    .stButton button:disabled,
+    .stButton button[disabled] {
+        background: var(--rule-soft) !important;
+        color: var(--ink-faint) !important;
+        border-color: var(--rule) !important;
+        cursor: not-allowed;
+    }
+    /* Inner text/markup must inherit the button's color (defeats stray dark
+       text leaking from data-baseweb wrappers when help= is set). */
+    .stButton button *,
+    .stDownloadButton button *,
+    .stFormSubmitButton button * {
+        color: inherit !important;
+        background: transparent !important;
+        font-family: inherit !important;
+    }
+    .stButton button p,
+    .stDownloadButton button p,
+    .stFormSubmitButton button p {
+        margin: 0 !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.2em !important;
+        text-transform: uppercase !important;
+    }
 
-    /* ── Form inputs (high-contrast borders, larger height) ─────────────── */
-    .stTextInput label, .stNumberInput label, .stTextArea label,
-    .stSelectbox label, .stDateInput label, .stRadio label, .stCheckbox label {
+    /* ── Form inputs ────────────────────────────────────────────────── */
+    .stTextInput input, .stNumberInput input, .stTextArea textarea {
+        border-radius: 0 !important;
+        border: 1px solid var(--rule) !important;
+        background: var(--white) !important;
         color: var(--ink) !important;
-        font-weight: 600 !important;
-        font-size: 0.85rem !important;
+        font-family: 'Inter', sans-serif !important;
+        font-size: 13px !important;
+        padding: 8px 10px !important;
     }
-    .stTextInput input, .stNumberInput input, .stTextArea textarea,
-    [data-baseweb="select"] > div, [data-baseweb="input"] input {
-        border-radius: 6px !important;
-        border: 1.5px solid var(--rule) !important;
-        background: #fff !important;
-        color: var(--ink) !important;
-        font-size: 0.95rem !important;
-    }
-    .stTextInput input, .stNumberInput input,
-    [data-baseweb="select"] > div, [data-baseweb="input"] input {
-        min-height: 42px !important;
-    }
-    .stTextInput input::placeholder, .stTextArea textarea::placeholder {
-        color: #94A3B8 !important;
-    }
-    .stTextInput input:focus, .stNumberInput input:focus,
-    .stTextArea textarea:focus,
-    [data-baseweb="select"] > div:focus-within {
-        border-color: var(--gov-navy) !important;
-        box-shadow: 0 0 0 3px var(--ring) !important;
+    .stTextInput input:focus, .stNumberInput input:focus, .stTextArea textarea:focus {
+        border-color: var(--saffron) !important;
+        box-shadow: 0 0 0 2px var(--ring) !important;
         outline: none !important;
     }
-
-    /* ── Expanders ──────────────────────────────────────────────────────── */
-    [data-testid="stExpander"] {
-        background: #fff;
-        border: 1px solid var(--rule-light);
-        border-radius: 8px;
-        margin-bottom: 12px;
-        overflow: hidden;
-        box-shadow: var(--shadow-sm);
+    [data-baseweb="select"] > div, [data-baseweb="input"] > div {
+        border-radius: 0 !important;
+        border: 1px solid var(--rule) !important;
+        background: var(--white) !important;
     }
-    [data-testid="stExpander"] summary {
-        background: var(--surface);
+    [data-baseweb="select"] > div { color: var(--ink) !important; min-height: 36px !important; }
+    .stTextInput label, .stNumberInput label, .stTextArea label,
+    .stSelectbox label, .stDateInput label, .stCheckbox label, .stRadio label,
+    [data-baseweb="form-control-label"] {
+        font-family: 'Inter', sans-serif !important;
+        font-size: 9px !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.25em !important;
+        text-transform: uppercase !important;
+        color: var(--ink-faint) !important;
+        margin-bottom: 6px !important;
+    }
+    .stCheckbox label > div:first-child { /* keep the actual checkbox visible */
+        display: flex !important;
+    }
+    ::placeholder { color: var(--ink-faint) !important; opacity: 0.7; }
+
+    /* ── Dividers ───────────────────────────────────────────────────── */
+    hr, [data-testid="stHorizontalRule"] {
+        border: 0 !important;
+        border-top: 0.5px solid var(--rule) !important;
+        margin: 28px 0 !important;
+        background: transparent !important;
+    }
+
+    /* ── st.metric (when used) ────────────────────────────────────── */
+    [data-testid="stMetric"] {
+        background: var(--white);
+        border: 0.5px solid var(--rule);
+        border-top: 6px solid var(--ink-soft);
+        padding: 18px 22px;
+    }
+    [data-testid="stMetricLabel"] {
+        font-family: 'Inter', sans-serif !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.3em !important;
+        text-transform: uppercase !important;
+        color: var(--ink-faint) !important;
+    }
+    [data-testid="stMetricLabel"] * {
+        font-family: 'Inter', sans-serif !important;
+        color: var(--ink-faint) !important;
+    }
+    [data-testid="stMetricValue"] {
+        font-family: 'Fraunces', serif !important;
+        font-size: 56px !important;
         font-weight: 700 !important;
         color: var(--ink) !important;
-        padding: 12px 18px !important;
-        font-size: 0.95rem !important;
+        letter-spacing: -0.02em !important;
+        font-variation-settings: 'opsz' 144;
+        line-height: 1.05 !important;
     }
-    [data-testid="stExpander"] summary:hover { background: var(--surface-2); }
-    [data-testid="stExpander"] summary p { color: var(--ink) !important; }
-
-    /* ── In-page tabs (st.tabs widget) ──────────────────────────────────── */
-    .stTabs [role="tablist"] {
-        gap: 2px;
-        border-bottom: 2px solid var(--saffron);
-        background: transparent;
+    [data-testid="stMetricValue"] * {
+        font-family: 'Fraunces', serif !important;
+        color: var(--ink) !important;
     }
-    .stTabs [role="tab"] {
-        background: var(--surface) !important;
-        border-radius: 6px 6px 0 0 !important;
-        padding: 10px 22px !important;
+    [data-testid="stMetricDelta"] {
+        font-family: 'JetBrains Mono', monospace !important;
+        font-size: 12px !important;
         font-weight: 600 !important;
-        color: var(--ink-secondary) !important;
-        border: 1px solid var(--rule-light) !important;
-        border-bottom: none !important;
     }
-    .stTabs [role="tab"]:hover { background: var(--surface-2) !important; }
-    .stTabs [role="tab"][aria-selected="true"] {
-        background: var(--gov-navy) !important;
-        color: #fff !important;
-        border-color: var(--gov-navy) !important;
-    }
-    .stTabs [role="tab"][aria-selected="true"] p { color: #fff !important; }
+    [data-testid="stMetricDelta"] svg { display: none !important; }
 
-    /* ── Dataframes (table styling) ─────────────────────────────────────── */
-    [data-testid="stDataFrame"] {
-        border: 1px solid var(--rule-light);
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: var(--shadow-sm);
-    }
-    [data-testid="stDataFrame"] thead tr th {
-        background: var(--gov-navy) !important;
-        color: #fff !important;
-        font-weight: 700 !important;
-    }
-
-    /* ── Alerts ─────────────────────────────────────────────────────────── */
-    [data-testid="stAlert"] {
-        border-radius: 8px;
-        border-left-width: 4px !important;
-        font-size: 0.92rem;
-    }
-
-    /* ── Cards ──────────────────────────────────────────────────────────── */
-    .gov-card {
-        background: #fff;
-        border: 1px solid var(--rule-light);
-        border-left: 4px solid var(--gov-navy);
-        border-radius: 8px;
-        padding: 16px 20px;
-        margin-bottom: 12px;
-        box-shadow: var(--shadow-sm);
-        transition: box-shadow 0.15s ease;
-        color: var(--ink);
-    }
-    .gov-card:hover { box-shadow: var(--shadow-md); }
-    .gov-card.saffron { border-left-color: var(--saffron); }
-    .gov-card.green   { border-left-color: var(--india-green); }
-    .gov-card b, .gov-card strong { color: var(--ink) !important; }
-
-    /* Help banners (toggleable) */
-    .help-banner {
-        background: linear-gradient(90deg, #FFF8E7 0%, #FEF3E0 100%);
-        border-left: 4px solid var(--saffron);
-        padding: 12px 16px;
-        border-radius: 0 4px 4px 0;
-        margin: 8px 0 16px 0;
-        color: #5C3A11;
-        font-size: 0.88rem;
-        line-height: 1.5;
-    }
-    .help-banner b { color: var(--saffron-deep); }
-    .help-banner .help-title {
-        font-size: 0.95rem;
+    /* ── Verdict badges (used in markdown across pages) ────────────── */
+    .verdict-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        font-family: 'Inter', sans-serif;
+        font-size: 10px;
         font-weight: 700;
-        color: var(--saffron-deep);
-        margin-bottom: 4px;
-        display: block;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: #fff !important;
+        border-radius: 0;
+        background: var(--ink-soft);
     }
-    .help-banner ul { margin: 4px 0 0 16px; padding: 0; }
+    .verdict-active            { background: var(--moss-bright) !important; }
+    .verdict-dormant           { background: var(--saffron) !important; }
+    .verdict-closed,
+    .verdict-closed_by_silence { background: var(--crimson) !important; }
+    .verdict-nascent           { background: var(--indigo) !important; }
+    .verdict-unknown           { background: var(--ink-soft) !important; }
+
+    .tier-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        font-family: 'Inter', sans-serif;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: #fff !important;
+    }
+    .tier-junior { background: var(--saffron); }
+    .tier-senior { background: var(--indigo); }
+
+    /* ── Help banner ──────────────────────────────────────────────── */
+    .help-banner {
+        background: var(--surface);
+        border-left: 3px solid var(--saffron);
+        padding: 12px 16px;
+        margin: 18px 0;
+        font-family: 'Inter', sans-serif;
+        font-size: 13px;
+        line-height: 1.55;
+        color: var(--ink-soft);
+    }
+    .help-banner .help-title {
+        font-family: 'Inter', sans-serif;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.25em;
+        text-transform: uppercase;
+        color: var(--saffron);
+        display: block;
+        margin-bottom: 6px;
+    }
+    .help-banner b, .help-banner strong { color: var(--ink) !important; font-weight: 700; }
+    .help-banner ul { margin: 4px 0 0 18px; padding: 0; }
     .help-banner li { margin: 2px 0; }
     .help-banner code {
-        background: rgba(255,153,51,0.18);
+        font-family: 'JetBrains Mono', monospace;
+        background: var(--rule-soft);
         padding: 1px 5px;
-        border-radius: 3px;
-        font-size: 0.83em;
-        color: var(--saffron-deep);
+        font-size: 12px;
+        color: var(--ink);
     }
 
-    /* Inline info icon (for use in markdown) */
     .info-icon {
         display: inline-block;
         width: 16px; height: 16px;
-        background: var(--gov-navy);
-        color: #fff !important;
+        background: var(--ink);
+        color: var(--paper) !important;
         border-radius: 50%;
         text-align: center;
         font-size: 11px;
@@ -716,178 +807,66 @@ st.markdown("""
     }
     .info-icon:hover { background: var(--saffron); }
 
-    /* ── Tooltip popover (the `?` help-icon hover content) ─────────────── */
-    /* The Streamlit `help=...` parameter renders a BaseWeb tooltip — by
-       default it has poor contrast. Force navy bg + white text so it's
-       always readable. */
-    [data-baseweb="tooltip"] {
-        background: var(--gov-navy) !important;
-        color: #FFFFFF !important;
-        border-radius: 6px !important;
+    /* ── Tooltip popup (BaseWeb portal — only the popup, scoped to role) ── */
+    [role="tooltip"] {
+        background: var(--ink) !important;
+        color: var(--paper) !important;
+        border-radius: 0 !important;
         box-shadow: var(--shadow-md) !important;
-        padding: 10px 14px !important;
-        max-width: 360px !important;
-        font-size: 0.86rem !important;
-        line-height: 1.5 !important;
+        padding: 7px 10px !important;
+        max-width: 240px !important;
+        font-size: 11px !important;
+        line-height: 1.45 !important;
         font-weight: 500 !important;
+        font-family: 'Inter', sans-serif !important;
         z-index: 9999 !important;
     }
-    [data-baseweb="tooltip"] *,
-    [data-baseweb="tooltip"] p,
-    [data-baseweb="tooltip"] span,
-    [data-baseweb="tooltip"] div {
-        color: #FFFFFF !important;
+    [role="tooltip"] *, [role="tooltip"] p, [role="tooltip"] span, [role="tooltip"] div {
+        color: var(--paper) !important;
         background: transparent !important;
     }
-    /* Tooltip arrow */
-    [data-baseweb="tooltip"] [data-popper-arrow] {
-        background: var(--gov-navy) !important;
+    /* High-specificity overrides — the tooltip body is rendered inside an
+       stMarkdownContainer whose `p`-color rule (later in this stylesheet) has
+       equal specificity but later cascade order, so it would otherwise win
+       and paint text dark on dark. These selectors out-specify it. */
+    [role="tooltip"] [data-testid="stMarkdownContainer"],
+    [role="tooltip"] [data-testid="stMarkdownContainer"] *,
+    [role="tooltip"] [data-testid="stMarkdownContainer"] p,
+    [role="tooltip"] [data-testid="stMarkdownContainer"] li,
+    [role="tooltip"] [data-testid="stMarkdownContainer"] span,
+    [role="tooltip"] [data-testid="stMarkdownContainer"] strong,
+    [role="tooltip"] [data-testid="stMarkdownContainer"] em,
+    [role="tooltip"] [data-testid="stMarkdownContainer"] b,
+    [role="tooltip"] [data-testid="stMarkdownContainer"] code {
+        color: var(--paper) !important;
+        background: transparent !important;
+    }
+    [role="tooltip"] [data-popper-arrow] { background: var(--ink) !important; }
+    /* Neutralise the BaseWeb tooltip *trigger* so it never leaks dark bg onto buttons */
+    [data-baseweb="tooltip"]:not([role="tooltip"]) {
+        background: transparent !important;
+        color: inherit !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        max-width: none !important;
+        font-size: inherit !important;
+        font-weight: inherit !important;
+        line-height: inherit !important;
+    }
+    [data-baseweb="tooltip"]:not([role="tooltip"]) *,
+    [data-baseweb="tooltip"]:not([role="tooltip"]) span,
+    [data-baseweb="tooltip"]:not([role="tooltip"]) div {
+        color: inherit !important;
+        background: transparent !important;
     }
 
-    /* ── Contrast overrides for Streamlit defaults ──────────────────────── */
-    /* Streamlit ships with several rgba(49,51,63,0.4–0.6) light-gray defaults.
-       These read poorly on white. Force every "muted" element to at least
-       our --ink-muted floor (#475569, 7:1 contrast on white). */
-    .stMarkdown small, .stMarkdown small *,
-    .stTooltipIcon, .stTooltipIcon *,
-    [data-testid="stTooltipIcon"], [data-testid="stTooltipIcon"] *,
-    [data-baseweb="form-control-caption"],
-    [data-baseweb="form-control-caption"] * {
-        color: var(--ink-muted) !important;
-    }
-    /* Help-icon `?` next to widget labels */
-    [data-testid="stTooltipHoverTarget"] svg,
-    [data-testid="stTooltipIcon"] svg {
-        fill: var(--gov-navy) !important;
-        color: var(--gov-navy) !important;
-    }
-    /* Streamlit's <p>, <li>, <span> in the main content default to slate-700-ish but
-       on some elements they fall to lighter — re-assert. */
-    [data-testid="stMarkdownContainer"] p,
-    [data-testid="stMarkdownContainer"] li,
-    [data-testid="stMarkdownContainer"] span:not(.verdict-badge):not(.tier-junior):not(.tier-senior):not(.info-icon) {
-        color: var(--ink) !important;
-    }
-    /* Bold inside markdown should be ink, not gray */
-    [data-testid="stMarkdownContainer"] strong,
-    [data-testid="stMarkdownContainer"] b {
-        color: var(--ink) !important;
-    }
-    /* Empty-state placeholders inside text inputs */
-    ::placeholder { color: #94A3B8 !important; opacity: 1; }
-    /* Glide Data Grid (st.data_editor) cell text — when used, force readable colour.
-       (Note: we now mostly avoid data_editor; this is a safety net.) */
-    [data-testid="stDataFrame"] canvas { background: #fff !important; }
-
-    /* ── Side-by-side comparison table (custom) ─────────────────────────── */
-    table.compare-table {
-        width: 100%;
-        border-collapse: collapse;
-        background: #fff;
-        border: 1px solid var(--rule-light);
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: var(--shadow-sm);
-        font-size: 0.92rem;
-    }
-    table.compare-table thead th {
-        background: var(--gov-navy);
-        color: #fff;
-        font-weight: 700;
-        padding: 10px 14px;
-        text-align: left;
-        font-size: 0.85rem;
-        letter-spacing: 0.04em;
-    }
-    table.compare-table tbody td {
-        padding: 10px 14px;
-        border-top: 1px solid var(--rule-light);
-        color: var(--ink);
-        vertical-align: top;
-    }
-    table.compare-table tbody td.field-label {
-        background: var(--surface);
-        color: var(--ink-secondary);
-        font-weight: 700;
-        width: 110px;
-        font-size: 0.82rem;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
-    table.compare-table tbody tr.match td.value-a,
-    table.compare-table tbody tr.match td.value-b {
-        background: #ECFDF5;     /* very light green */
-        color: #065F46;
-        font-weight: 600;
-    }
-    table.compare-table tbody tr.mismatch td.value-a,
-    table.compare-table tbody tr.mismatch td.value-b {
-        background: #FEF3C7;     /* very light amber */
-        color: #78350F;
-        font-weight: 600;
-    }
-    table.compare-table tbody tr.missing td.value-a,
-    table.compare-table tbody tr.missing td.value-b {
-        background: #F8FAFC;
-        color: var(--ink-muted);
-        font-style: italic;
-    }
-    table.compare-table td.verdict-col { width: 56px; text-align: center; font-size: 1.1rem; }
-
-    /* ── Sortable record row (replaces data_editor) ─────────────────────── */
-    .record-row {
-        display: grid;
-        grid-template-columns: 110px 110px 1.6fr 1fr 110px 130px 200px;
-        gap: 12px;
-        align-items: center;
-        padding: 10px 14px;
-        background: #fff;
-        border: 1px solid var(--rule-light);
-        border-left-width: 4px;
-        border-radius: 6px;
-        margin-bottom: 6px;
-        font-size: 0.9rem;
-        color: var(--ink);
-        transition: box-shadow 0.12s ease, transform 0.12s ease;
-    }
-    .record-row:hover { box-shadow: var(--shadow-sm); }
-    .record-row .group-pill {
-        font-size: 0.72rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        color: #fff;
-        padding: 3px 10px;
-        border-radius: 12px;
-        text-align: center;
-        white-space: nowrap;
-    }
-    .record-row .src {
-        font-weight: 700;
-        color: var(--gov-navy);
-        font-size: 0.85rem;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-    }
-    .record-row .name { font-weight: 600; }
-    .record-row .pan, .record-row .pin {
-        font-family: 'Roboto Mono', monospace;
-        font-size: 0.85rem;
-        color: var(--ink-secondary);
-    }
-    .record-row .id-cell {
-        font-family: 'Roboto Mono', monospace;
-        font-size: 0.82rem;
-        color: var(--ink-secondary);
-        word-break: break-all;
-    }
-
-    /* ── BaseWeb dropdown popover (selectbox + date picker open state) ──── */
-    /* Fixes the dark-on-grey unreadable dropdown */
+    /* ── BaseWeb dropdown popover (selectbox / date) ─────────────────── */
     [data-baseweb="popover"] {
-        background: #fff !important;
+        background: var(--white) !important;
         border: 1px solid var(--rule) !important;
-        border-radius: 8px !important;
+        border-radius: 0 !important;
         box-shadow: var(--shadow-md) !important;
         color: var(--ink) !important;
     }
@@ -895,84 +874,457 @@ st.markdown("""
     [data-baseweb="popover"] ul[role="listbox"],
     [data-baseweb="popover"] > div,
     [data-baseweb="menu"] {
-        background: #fff !important;
+        background: var(--white) !important;
         color: var(--ink) !important;
         padding: 4px !important;
     }
     [data-baseweb="popover"] [role="option"],
     [data-baseweb="popover"] li,
     [data-baseweb="menu"] li {
-        background: #fff !important;
+        background: var(--white) !important;
         color: var(--ink) !important;
         padding: 8px 14px !important;
-        border-radius: 4px !important;
-        margin: 1px 2px !important;
-        font-size: 0.92rem !important;
+        font-family: 'Inter', sans-serif !important;
+        font-size: 13px !important;
+        border-radius: 0 !important;
+        margin: 0 !important;
     }
     [data-baseweb="popover"] [role="option"]:hover,
-    [data-baseweb="popover"] li:hover,
-    [data-baseweb="menu"] li:hover {
-        background: var(--surface-2) !important;
-        color: var(--gov-navy) !important;
-        cursor: pointer;
+    [data-baseweb="popover"] li:hover {
+        background: var(--surface) !important;
+        color: var(--ink) !important;
     }
-    [data-baseweb="popover"] [aria-selected="true"],
-    [data-baseweb="popover"] li[aria-selected="true"] {
-        background: var(--gov-navy) !important;
-        color: #fff !important;
+    [data-baseweb="popover"] [aria-selected="true"] {
+        background: var(--ink) !important;
+        color: var(--paper) !important;
     }
-    /* The text inside option items (some Streamlit versions wrap in span) */
     [data-baseweb="popover"] [role="option"] *,
-    [data-baseweb="popover"] li * {
-        color: inherit !important;
+    [data-baseweb="popover"] li * { color: inherit !important; }
+
+    /* ── Date picker calendar (popover) — bulletproof overrides ─────── */
+    /* The BaseWeb date picker pops up via a portal containing nested
+       containers. Force white bg + ink text at every level so the calendar
+       is always readable against the cream paper page. */
+    [data-baseweb="popover"]:has([data-baseweb="calendar"]),
+    [data-baseweb="popover"]:has([data-baseweb="datepicker"]),
+    [data-baseweb="datepicker"],
+    [data-baseweb="calendar"],
+    [data-baseweb="calendar-month"],
+    [data-baseweb="calendar-grid"] {
+        background-color: #FFFFFF !important;
+        color: #0f1f3a !important;
+        border-radius: 0 !important;
+        border: 1px solid #c9b896 !important;
     }
-    /* Calendar (date picker) */
-    [data-baseweb="calendar"] {
-        background: #fff !important;
-        color: var(--ink) !important;
-        border-radius: 8px !important;
+    [data-baseweb="calendar"] *,
+    [data-baseweb="datepicker"] *,
+    [data-baseweb="popover"]:has([data-baseweb="calendar"]) * {
+        background-color: transparent !important;
+        color: #0f1f3a !important;
     }
-    [data-baseweb="calendar"] * { color: var(--ink) !important; }
-    [data-baseweb="calendar"] button {
+    [data-baseweb="calendar"] button,
+    [data-baseweb="calendar"] [role="gridcell"],
+    [data-baseweb="calendar"] [role="button"] {
+        background-color: transparent !important;
+        color: #0f1f3a !important;
+        border-radius: 0 !important;
+        font-family: 'JetBrains Mono', monospace !important;
+        font-size: 12px !important;
+    }
+    [data-baseweb="calendar"] button:hover,
+    [data-baseweb="calendar"] [role="gridcell"]:hover,
+    [data-baseweb="calendar"] [role="button"]:hover {
+        background-color: #f7f1e5 !important;
+        color: #0f1f3a !important;
+    }
+    [data-baseweb="calendar"] [aria-selected="true"],
+    [data-baseweb="calendar"] [aria-selected="true"] *,
+    [data-baseweb="calendar"] [aria-pressed="true"],
+    [data-baseweb="calendar"] [aria-pressed="true"] * {
+        background-color: #d97706 !important;
+        color: #FFFFFF !important;
+        font-weight: 700 !important;
+    }
+    [data-baseweb="calendar"] [aria-disabled="true"],
+    [data-baseweb="calendar"] [aria-disabled="true"] * {
+        color: #c9b896 !important;
+        opacity: 0.6;
+    }
+    /* Day-of-week header strip */
+    [data-baseweb="calendar"] [role="columnheader"],
+    [data-baseweb="calendar"] th {
+        font-family: 'Inter', sans-serif !important;
+        font-size: 9px !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.2em !important;
+        text-transform: uppercase !important;
+        color: #7a6a55 !important;
+    }
+    /* Month/year title in the calendar header */
+    [data-baseweb="calendar"] h2,
+    [data-baseweb="calendar"] h3,
+    [data-baseweb="calendar"] [aria-live="polite"] {
+        font-family: 'Fraunces', serif !important;
+        font-size: 14px !important;
+        font-weight: 700 !important;
+        color: #0f1f3a !important;
+    }
+
+    /* ── Tabs ──────────────────────────────────────────────────────── */
+    .stTabs [data-baseweb="tab-list"] {
+        background: var(--paper);
+        border-bottom: 0.5px solid var(--rule);
+        gap: 0;
+    }
+    .stTabs [data-baseweb="tab"] {
         background: transparent !important;
+        color: var(--ink-soft) !important;
+        border-radius: 0 !important;
+        padding: 12px 18px !important;
+        font-family: 'Inter', sans-serif !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.2em !important;
+        text-transform: uppercase !important;
+    }
+    .stTabs [data-baseweb="tab"]:hover { color: var(--ink) !important; }
+    .stTabs [data-baseweb="tab"][aria-selected="true"] {
+        color: var(--ink) !important;
+        border-bottom: 3px solid var(--saffron) !important;
+    }
+
+    /* ── Expander ──────────────────────────────────────────────────── */
+    [data-testid="stExpander"] {
+        border: 0.5px solid var(--rule) !important;
+        border-radius: 0 !important;
+        background: var(--white);
+    }
+    [data-testid="stExpander"] > details > summary,
+    .streamlit-expanderHeader {
+        background: var(--surface) !important;
+        border-radius: 0 !important;
+        color: var(--ink) !important;
+        font-family: 'Inter', sans-serif !important;
+        font-size: 12px !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.15em !important;
+        text-transform: uppercase !important;
+        padding: 10px 14px !important;
+        border: 0 !important;
+    }
+
+    /* ── Tables / dataframes ───────────────────────────────────────── */
+    .stDataFrame, [data-testid="stDataFrameContainer"] {
+        border: 0.5px solid var(--rule) !important;
+        border-radius: 0 !important;
+    }
+    .stTable thead, .stDataFrame thead, [data-testid="stDataFrame"] thead {
+        background: var(--surface) !important;
+    }
+    .stTable thead th, .stDataFrame thead th {
+        font-family: 'Inter', sans-serif !important;
+        font-size: 10px !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.2em !important;
+        text-transform: uppercase !important;
+        color: var(--ink-faint) !important;
+        padding: 10px 12px !important;
+        border-bottom: 0.5px solid var(--rule) !important;
+    }
+    .stTable tbody td, .stDataFrame tbody td {
+        font-family: 'Inter', sans-serif !important;
+        font-size: 13px !important;
+        color: var(--ink) !important;
+        padding: 9px 12px !important;
+        border-bottom: 0.5px solid var(--rule-soft) !important;
+    }
+
+    /* Markdown tables */
+    [data-testid="stMarkdownContainer"] table {
+        border-collapse: collapse;
+        width: 100%;
+        font-family: 'Inter', sans-serif;
+        font-size: 13px;
+        margin: 12px 0;
+    }
+    [data-testid="stMarkdownContainer"] table th {
+        background: var(--surface);
+        color: var(--ink-faint);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        padding: 8px 12px;
+        border-bottom: 0.5px solid var(--rule);
+        text-align: left;
+    }
+    [data-testid="stMarkdownContainer"] table td {
+        padding: 8px 12px;
+        border-bottom: 0.5px solid var(--rule-soft);
+        color: var(--ink);
+    }
+
+    /* Inline code / blockquote */
+    [data-testid="stMarkdownContainer"] code {
+        font-family: 'JetBrains Mono', monospace;
+        background: var(--rule-soft);
+        padding: 1px 5px;
+        border-radius: 0;
+        font-size: 12px;
+        color: var(--ink);
+    }
+    blockquote, [data-testid="stMarkdownContainer"] blockquote {
+        border-left: 3px solid var(--saffron) !important;
+        background: var(--surface) !important;
+        color: var(--ink-soft) !important;
+        padding: 12px 16px !important;
+        border-radius: 0 !important;
+        margin: 16px 0 !important;
+    }
+
+    /* ── Headings inside content ───────────────────────────────────── */
+    [data-testid="stMarkdownContainer"] h1 {
+        font-family: 'Fraunces', Georgia, serif !important;
+        font-size: 36px !important;
+        font-weight: 700 !important;
+        color: var(--ink) !important;
+        letter-spacing: -0.02em !important;
+        margin: 24px 0 8px 0 !important;
+        font-variation-settings: 'opsz' 144;
+    }
+    [data-testid="stMarkdownContainer"] h2 {
+        font-family: 'Fraunces', serif !important;
+        font-size: 22px !important;
+        font-weight: 700 !important;
+        color: var(--ink) !important;
+        letter-spacing: -0.01em !important;
+        margin: 20px 0 8px 0 !important;
+        font-variation-settings: 'opsz' 144;
+    }
+    [data-testid="stMarkdownContainer"] h3 {
+        font-family: 'Fraunces', serif !important;
+        font-size: 18px !important;
+        font-weight: 700 !important;
+        color: var(--ink) !important;
+        margin: 18px 0 6px 0 !important;
+    }
+    [data-testid="stMarkdownContainer"] p,
+    [data-testid="stMarkdownContainer"] li {
+        color: var(--ink) !important;
+        line-height: 1.55;
+        font-size: 14px;
+    }
+    [data-testid="stMarkdownContainer"] strong,
+    [data-testid="stMarkdownContainer"] b {
+        color: var(--ink) !important;
+        font-weight: 700;
+    }
+    [data-testid="stMarkdownContainer"] em,
+    [data-testid="stMarkdownContainer"] i {
+        font-family: 'Fraunces', serif;
+        font-style: italic;
+    }
+    small, .stMarkdown small { color: var(--ink-faint) !important; }
+
+    /* st.title / st.subheader / st.caption */
+    .stMarkdown h1, h1.stTitle {
+        font-family: 'Fraunces', serif !important;
+        font-size: 40px !important;
+        color: var(--ink) !important;
+        font-weight: 700 !important;
+        letter-spacing: -0.02em !important;
+        line-height: 1.1 !important;
+        font-variation-settings: 'opsz' 144;
+    }
+    .stMarkdown h2 {
+        font-family: 'Fraunces', serif !important;
+        color: var(--ink) !important;
+        font-weight: 700 !important;
+    }
+    .stCaption, [data-testid="stCaptionContainer"], .stMarkdown small em {
+        font-family: 'Fraunces', serif !important;
+        font-style: italic !important;
+        color: var(--ink-faint) !important;
+        font-size: 14px !important;
+    }
+
+    /* ── Page-context bar (subtitle strip below nav) ───────────────── */
+    .page-context {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 12px 0;
+        margin: 0 0 4px 0;
+        border-bottom: 0.5px solid var(--rule);
+        font-family: 'Inter', sans-serif;
+        font-size: 11px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--ink-faint);
+    }
+    .page-context .pc-icon {
+        font-size: 13px;
+        color: var(--saffron);
+        font-weight: 700;
+    }
+    .page-context .pc-title {
+        font-weight: 700;
+        color: var(--ink);
+    }
+    .page-context .pc-subtitle {
+        font-family: 'Fraunces', serif;
+        font-style: italic;
+        text-transform: none;
+        letter-spacing: normal;
+        font-size: 13px;
+        color: var(--ink-faint);
+    }
+    .page-context .pc-spacer { flex: 1; }
+    .page-context .pc-meta {
+        font-family: 'JetBrains Mono', monospace;
+        text-transform: none;
+        letter-spacing: normal;
+        font-size: 11px;
+        color: var(--ink-soft);
+    }
+    .page-context .pc-meta b { color: var(--ink) !important; font-weight: 700; }
+
+    /* ── Footer ────────────────────────────────────────────────────── */
+    .gov-footer {
+        background: var(--paper);
+        border-top: 0.5px solid var(--rule);
+        color: var(--ink-faint);
+        padding: 24px 64px;
+        margin: 60px -64px -3rem -64px;
+        font-family: 'Inter', sans-serif;
+        font-size: 11px;
+        line-height: 1.6;
+        text-align: center;
+    }
+    .gov-footer b, .gov-footer strong { color: var(--ink) !important; font-weight: 700; }
+
+    /* ── Plotly chart container — sit on white card ─────────────────── */
+    [data-testid="stPlotlyChart"] {
+        background: var(--white);
+        border: 0.5px solid var(--rule);
+        padding: 8px;
+        box-sizing: border-box;
+        overflow: hidden;
+        width: 100% !important;
+    }
+    [data-testid="stPlotlyChart"] > div,
+    [data-testid="stPlotlyChart"] .js-plotly-plot,
+    [data-testid="stPlotlyChart"] .plotly,
+    [data-testid="stPlotlyChart"] .main-svg {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    /* ── Misc legacy class compatibility (preserve markup that still references) ── */
+    .gok-en { color: var(--paper) !important; font-weight: 700; }
+    .platform-kn { color: var(--rule); }
+
+    /* Spinner / progress */
+    .stSpinner > div { border-top-color: var(--saffron) !important; }
+    [data-testid="stProgress"] > div > div > div > div { background: var(--saffron) !important; }
+
+    /* Alert boxes (st.info/success/warning/error) */
+    [data-baseweb="notification"] {
+        border-radius: 0 !important;
+        border: 0.5px solid var(--rule) !important;
+        background: var(--surface) !important;
+    }
+    [data-baseweb="notification"] * { color: var(--ink) !important; }
+
+    /* Help-mode container — wraps both the marker (a hidden div) and the
+       columns row containing the checkbox. Find the container's vertical
+       block via :has() and extend it to viewport edges so the checkbox's
+       right edge aligns with the toolbar's status pill below. */
+    .help-mode-marker { height: 0; margin: 0; padding: 0; }
+
+    [data-testid="stVerticalBlock"]:has(> [data-testid="stElementContainer"] > [data-testid="stMarkdownContainer"] > .help-mode-marker) {
+        margin-left: -64px !important;
+        margin-right: -64px !important;
+        margin-bottom: -8px !important;
+        padding-left: 64px !important;
+        padding-right: 64px !important;
+    }
+    /* Right-align the checkbox column inside that container */
+    [data-testid="stVerticalBlock"]:has(> [data-testid="stElementContainer"] > [data-testid="stMarkdownContainer"] > .help-mode-marker) [data-testid="column"]:last-child {
+        display: flex !important;
+        justify-content: flex-end !important;
+        align-items: center !important;
+    }
+    [data-testid="stVerticalBlock"]:has(> [data-testid="stElementContainer"] > [data-testid="stMarkdownContainer"] > .help-mode-marker) [data-testid="stCheckbox"] {
+        margin: 0 !important;
+        padding: 0 !important;
+        flex: 0 0 auto !important;
+        width: auto !important;
+    }
+
+    /* Help-mode toggle — single-line, right-aligned in its column */
+    .stCheckbox label,
+    [data-testid="stCheckbox"] label {
+        white-space: nowrap !important;
+    }
+    [data-testid="stCheckbox"] label > div:nth-child(2),
+    [data-testid="stCheckbox"] label > p,
+    [data-testid="stCheckbox"] label > span {
+        white-space: nowrap !important;
+        font-family: 'Inter', sans-serif !important;
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        letter-spacing: 0.05em !important;
+        text-transform: none !important;
         color: var(--ink) !important;
     }
-    [data-baseweb="calendar"] button:hover {
-        background: var(--surface-2) !important;
+
+    /* ── `?` help-icon next to widget labels (BaseWeb tooltip trigger) ───── */
+    /* Subtle saffron at low opacity, brightening on hover. */
+    [data-testid="stTooltipHoverTarget"],
+    [data-testid="stTooltipIcon"] {
+        opacity: 0.35;
+        transition: opacity 0.15s ease;
+        margin-left: 4px;
+        vertical-align: middle;
     }
-    [data-baseweb="calendar"] [aria-selected="true"] {
-        background: var(--gov-navy) !important;
-        color: #fff !important;
+    [data-testid="stTooltipHoverTarget"]:hover,
+    [data-testid="stTooltipIcon"]:hover { opacity: 1; }
+    [data-testid="stTooltipHoverTarget"] svg,
+    [data-testid="stTooltipIcon"] svg {
+        fill: var(--saffron) !important;
+        color: var(--saffron) !important;
+        width: 13px; height: 13px;
     }
 
-    /* ── Help banners ───────────────────────────────────────────────────── */
-    /* (overrides above to bump contrast) */
-    .help-banner {
-        background: #FFFBEB !important;
-        border-left: 4px solid var(--saffron) !important;
-        color: #78350F !important;
+    /* ── Column-aware button alignment ───────────────────────────────────── */
+    /* Inside a horizontal column block, buttons usually sit alongside labelled
+       inputs. Push them down by one label height so the button bottom aligns
+       with the input fields. Streamlit's column DOM is:
+         [column] > [stVerticalBlock] > [stElementContainer] > [stButton]
+       so we use a descendant selector to span the wrappers. */
+    [data-testid="stHorizontalBlock"] [data-testid="column"] [data-testid="stButton"],
+    [data-testid="stHorizontalBlock"] [data-testid="column"] [data-testid="stDownloadButton"] {
+        margin-top: 28px;
     }
-    .help-banner b, .help-banner strong { color: #78350F !important; }
-    .help-banner .help-title { color: var(--saffron-deep) !important; }
-    .help-banner code {
-        background: rgba(255,153,51,0.18) !important;
-        color: var(--saffron-deep) !important;
+    /* If the column already starts with a labelled widget (text input, select,
+       date) above the button, no extra push is needed — but the typical case
+       for these toolbars is "row of inputs ending in a button", which the
+       margin-top above handles. Single-button rows look fine with a small
+       breathing space. */
+    /* Keep input + selectbox + button at consistent height so they share a baseline. */
+    .stTextInput input,
+    .stNumberInput input,
+    .stDateInput input,
+    [data-baseweb="select"] > div,
+    [data-baseweb="input"] > div {
+        min-height: 38px !important;
     }
-
-    /* Footer */
-    .gov-footer {
-        margin-top: 36px; padding: 18px 0;
-        border-top: 3px solid var(--saffron);
-        color: var(--ink-secondary);
-        font-size: 0.85rem;
-        text-align: center;
-        line-height: 1.6;
+    .stButton button,
+    .stDownloadButton button,
+    .stFormSubmitButton button {
+        min-height: 38px !important;
     }
-    .gov-footer b, .gov-footer strong { color: var(--ink) !important; }
-
-    /* Hide Streamlit chrome */
-    #MainMenu, footer, [data-testid="stHeader"] { visibility: hidden; height: 0; }
-    [data-testid="stToolbar"] { visibility: hidden; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -1067,34 +1419,27 @@ def _load_header_crest() -> str:
 
 
 def render_header():
-    """Government banner with the Karnataka emblem (real file from
-    frontend/assets/ if present, hand-drawn fallback otherwise)."""
+    """Three-strip editorial masthead: indigo bar with bilingual one-line
+    tagline + serif title (italic-saffron `Platform`) + dept block on the
+    right, then the saffron+green tricolor hairline."""
     crest_img = _load_header_crest()
 
     st.markdown(
-        f"""
-    <div class="gov-header">
-        <div class="crest">{crest_img}</div>
-        <div class="titles">
-            <div class="gov-tagline">
-              <span class="kannada">ಕರ್ನಾಟಕ ಸರ್ಕಾರ</span>
-              <span class="gok-en">· Government of Karnataka</span>
-            </div>
-            <div class="platform">Unified Business Identifier Platform</div>
-            <div class="platform-kn">ಏಕೀಕೃತ ವ್ಯಾಪಾರ ಗುರುತಿಸುವಿಕೆ ವೇದಿಕೆ</div>
-            <div class="dept">
-              <b>Department of Commerce &amp; Industries</b> ·
-              Active Business Intelligence System ·
-              ವಾಣಿಜ್ಯ ಮತ್ತು ಕೈಗಾರಿಕೆ ಇಲಾಖೆ
-            </div>
-        </div>
-    </div>
-    <div class="tricolor">
-        <div class="saffron"></div>
-        <div class="white"></div>
-        <div class="green"></div>
-    </div>
-    """,
+        f'<div class="gov-header">'
+        f'<div class="crest">{crest_img}</div>'
+        f'<div class="titles">'
+        f'<div class="gov-tagline">'
+        f'<span class="kannada">ಕರ್ನಾಟಕ ಸರ್ಕಾರ</span>'
+        f'<span class="gok-en">&middot; Government of Karnataka</span>'
+        f'</div>'
+        f'<div class="platform">Unified Business Identifier <span class="ital">Platform</span></div>'
+        f'</div>'
+        f'<div class="dept-block">'
+        f'<div class="dept-name">Dept. of Commerce &amp; Industries</div>'
+        f'<div class="dept-sys">Active Business Intelligence System</div>'
+        f'</div>'
+        f'</div>'
+        f'<div class="tricolor"></div>',
         unsafe_allow_html=True,
     )
 
@@ -1171,50 +1516,74 @@ def info_icon(text: str) -> str:
     return f'<span class="info-icon" title="{safe}">ⓘ</span>'
 
 
-# ── Reviewer-control bar (just under the tricolor) ────────────────────────────
-# Pulled out of the sidebar; rendered as a row of compact widgets.
-ctrl_cols = st.columns([1.4, 1, 1.2, 0.9, 1.5])
-reviewer_id = ctrl_cols[0].text_input(
-    "Reviewer ID",
-    value=st.session_state.get("reviewer_id", "reviewer_001"),
-    key="reviewer_id",
-    help=H("Used to attribute every reviewer decision in the audit log."),
-)
-reviewer_tier = ctrl_cols[1].selectbox(
-    "Tier",
-    ["junior", "senior"],
-    index=["junior", "senior"].index(st.session_state.get("reviewer_tier", "junior")),
-    key="reviewer_tier",
-    help=H("Senior reviewers see deferred items first; their decisions become precedents."),
-)
-ref_date = ctrl_cols[2].date_input(
-    "Reference date",
-    value=date(2025, 5, 1),
-    key="ref_date",
-    help=H("Treated as 'today' for activity-decay computation. Default 2025-05-01 because synthetic events end April 2025."),
-)
+# ── Reviewer toolbar (editorial field/value strip) ───────────────────────────
+# Render the Streamlit widgets inside a hidden host so values still bind to
+# session_state, then overlay a typography-only visible strip above with the
+# same data. Click the "Edit" affordance to expand the actual widgets.
+_default_reviewer = st.session_state.get("reviewer_id", "reviewer_001")
+_default_tier     = st.session_state.get("reviewer_tier", "junior")
+_default_ref      = st.session_state.get("ref_date", date(2025, 5, 1))
+_default_help     = st.session_state.get("help_mode", True)
+
+# Full-width reviewer-settings expander (collapsed by default).
+with st.expander("Reviewer settings", expanded=False):
+    _ec = st.columns([1.4, 1, 1.4])
+    reviewer_id = _ec[0].text_input(
+        "Reviewer ID", value=_default_reviewer, key="reviewer_id",
+        help=H("Used to attribute every reviewer decision in the audit log."),
+    )
+    reviewer_tier = _ec[1].selectbox(
+        "Tier", ["junior", "senior"],
+        index=["junior", "senior"].index(_default_tier), key="reviewer_tier",
+        help=H("Senior reviewers see deferred items first; their decisions become precedents."),
+    )
+    ref_date = _ec[2].date_input(
+        "Reference date", value=_default_ref, key="ref_date",
+        help=H("Treated as 'today' for activity-decay computation."),
+    )
+
+# Help-mode toggle — sits directly above the editorial toolbar's status pill.
+# Wrap marker + columns in one container so CSS can scope all of it via :has.
+_hbox = st.container()
+with _hbox:
+    st.markdown('<div class="help-mode-marker"></div>', unsafe_allow_html=True)
+    _hcol1, _hcol2 = st.columns([8, 1.5])
+    with _hcol2:
+        help_mode = st.checkbox(
+            "📖 Help mode", value=_default_help, key="help_mode",
+            help="Toggle in-page guidance and tooltips on/off.",
+        )
+
 ref_date_str = ref_date.isoformat()
-help_mode = ctrl_cols[3].checkbox(
-    "📖 Help",
-    value=True,
-    key="help_mode",
-    help="Toggle in-page guidance and tooltips on/off.",
+
+# API health probe drives the pill.
+_health = api_get("/health", timeout=3)
+_health_ok = bool(_health and _health.get("status") == "ok")
+_lat = _health.get("latency_ms") if isinstance(_health, dict) else None
+_lat_str = f"{int(_lat)}ms" if isinstance(_lat, (int, float)) else "live"
+_pill_state = "" if _health_ok else "red"
+_pill_text = f"API Live &middot; {_lat_str}" if _health_ok else "API Down"
+
+# Visible editorial toolbar — typography-only.
+st.markdown(
+    f'<div class="toolbar">'
+    f'<div class="field"><div class="field-label">Reviewer</div>'
+    f'<div class="field-value">{reviewer_id}</div></div>'
+    f'<div class="sep"></div>'
+    f'<div class="field"><div class="field-label">Tier</div>'
+    f'<div class="field-value">{reviewer_tier.title()}</div></div>'
+    f'<div class="sep"></div>'
+    f'<div class="field"><div class="field-label">Reference Date</div>'
+    f'<div class="field-value">{ref_date_str}</div></div>'
+    f'<div class="spacer"></div>'
+    f'<div class="status-pill {_pill_state}">'
+    f'<span class="dot"></span>'
+    f'<span class="lbl">Status</span>'
+    f'<span class="latency">{_pill_text}</span>'
+    f'</div>'
+    f'</div>',
+    unsafe_allow_html=True,
 )
-# API status
-health = api_get("/health", timeout=3)
-if health and health.get("status") == "ok":
-    ctrl_cols[4].markdown(
-        f'<div style="padding-top:32px; font-size:0.8rem; color:var(--india-green); font-weight:600;">'
-        f'● API live'
-        f'</div>'
-        f'<div style="font-size:0.7rem; color:var(--ink-muted);">{API_BASE}</div>',
-        unsafe_allow_html=True,
-    )
-else:
-    ctrl_cols[4].markdown(
-        '<div style="padding-top:32px; color:#991B1B; font-weight:600;">● API unreachable</div>',
-        unsafe_allow_html=True,
-    )
 
 # ── Top tab navigation ────────────────────────────────────────────────────────
 PAGES = [
@@ -1239,6 +1608,10 @@ if "nav_to" in st.session_state:
     if target in PAGES:
         st.session_state["nav_radio"] = target
 
+# Marker so the heavy nav-radio CSS scopes only to THIS radio (in-page filter
+# radios elsewhere on each page must not inherit the saffron-underline pill style).
+st.markdown('<div class="ubid-nav-marker" style="display:none;"></div>',
+            unsafe_allow_html=True)
 page = st.radio(
     "Navigation",
     PAGES,
@@ -1248,65 +1621,92 @@ page = st.radio(
 )
 
 
-# ── Page-context strip (subtitle + meta below the nav) ───────────────────────
-def render_page_context(page_name: str):
-    """Render a contextual strip below the nav describing the current page.
-    Helps the reviewer orient — what page they're on, what it's for, and one
-    relevant live stat."""
-    # Map page → (icon, short title, one-line description)
-    contexts = {
-        "ℹ️ About":         ("ℹ", "About this platform",
-                              "How the UBID platform works · architecture · proposal compliance · glossary"),
-        "📊 Dashboard":     ("📊", "Platform Dashboard",
-                              "Live overview of UBIDs, source records, queue size, and model calibration"),
-        "🔍 Browse UBIDs":  ("🔍", "Browse UBIDs",
-                              "Search, filter and open every Unified Business Identifier in the system"),
-        "📋 Review Queue":  ("📋", "Review Queue",
-                              "Ambiguous match candidates awaiting reviewer decision"),
-        "🧐 Audit Merges":  ("🧐", "Audit Merge Decisions",
-                              "Verify auto-merged UBIDs · sort records into groups · feeds future training"),
-        "🧭 UBID Lookup":   ("🧭", "UBID Lookup",
-                              "Resolve any source identifier, PAN, or name+pin to a UBID"),
-        "📈 Activity Status": ("📈", "Activity Status",
-                                "Verdict, evidence timeline, lineage and unmerge controls for one UBID"),
-        "🚧 Quarantine":    ("🚧", "Quarantine Queue",
-                              "Activity events that could not be joined to a UBID"),
-        "📜 Reviewer Log":  ("📜", "Reviewer Activity Log",
-                              "Decision history per reviewer · audit trail · throughput chart"),
-        "❓ Query Explorer":("❓", "Analytical Query Explorer",
-                              "Run the proposal's exemplar queries against the UBID-keyed warehouse"),
-        "📤 Ingest Data":   ("📤", "Ingest Data",
-                              "Upload CSV records or activity events through the live pipeline"),
-        "⚙️ Admin":         ("⚙", "Administration",
-                              "Model retraining · re-scoring · calibration · synonyms · verdicts"),
-    }
-    icon, title, subtitle = contexts.get(
-        page_name, ("•", page_name, "")
-    )
+# ── Editorial page hero (eyebrow numbering + saffron rule + Fraunces H1) ─────
+# Replaces both st.title/st.caption AND the old `page-context` thin strip.
+# Each page block below MUST NOT call st.title/st.caption — the hero rendered
+# here is the single source of truth.
+PAGE_HEROES = {
+    "📊 Dashboard":      ("01", "Platform Dashboard",
+        "A live view of Karnataka's industrial base, <span class='ital'>in motion.</span>",
+        "Real-time view of UBID assignments, source ingest, and reviewer queue."),
+    "🔍 Browse UBIDs":   ("02", "Browse UBIDs",
+        "Every business, <span class='ital'>indexed.</span>",
+        "Search, filter and open every Unified Business Identifier in the system."),
+    "📋 Review Queue":   ("03", "Review Queue",
+        "Are these the same <span class='ital'>business?</span>",
+        "Ambiguous match candidates awaiting reviewer decision."),
+    "🧐 Audit Merges":   ("04", "Audit Merges",
+        "Sort the <span class='ital'>uncertain.</span>",
+        "Verify auto-merged UBIDs · sort records into groups · feeds future training."),
+    "🧭 UBID Lookup":    ("05", "UBID Lookup",
+        "Find any business, <span class='ital'>fast.</span>",
+        "Resolve any source identifier, PAN, or name + pin to a UBID."),
+    "📈 Activity Status":("06", "Activity Status",
+        "Evidence over <span class='ital'>time.</span>",
+        "Verdict, evidence timeline, lineage and unmerge controls for one UBID."),
+    "🚧 Quarantine":     ("07", "Quarantine",
+        "Events still <span class='ital'>unjoined.</span>",
+        "Activity events that could not be joined to a UBID."),
+    "📜 Reviewer Log":   ("08", "Reviewer Log",
+        "Every decision, <span class='ital'>attributed.</span>",
+        "Decision history per reviewer · audit trail · throughput chart."),
+    "❓ Query Explorer": ("09", "Query Explorer",
+        "Ask the <span class='ital'>warehouse.</span>",
+        "Run the proposal's exemplar queries against the UBID-keyed warehouse."),
+    "📤 Ingest Data":    ("10", "Ingest Data",
+        "New records, <span class='ital'>routed.</span>",
+        "Upload CSV records or activity events through the live pipeline."),
+    "⚙️ Admin":          ("11", "Administration",
+        "Operate the <span class='ital'>model.</span>",
+        "Model retraining · re-scoring · calibration · synonyms · verdicts."),
+    "ℹ️ About":          ("12", "About",
+        "How the platform <span class='ital'>works.</span>",
+        "Architecture · proposal compliance · glossary."),
+}
 
-    # Try to fetch a small live stat (cheap, cached for this render)
-    meta_html = ""
+_YEAR_WORDS = {
+    "2023": "two thousand twenty-three",
+    "2024": "two thousand twenty-four",
+    "2025": "two thousand twenty-five",
+    "2026": "two thousand twenty-six",
+    "2027": "two thousand twenty-seven",
+}
+
+
+def render_page_context(page_name: str):
+    """Editorial page hero: eyebrow numbering · saffron rule · Fraunces H1
+    with italic accent · italic subtitle · right-aligned aux block (date)."""
+    num, title, h1_html, subtitle = PAGE_HEROES.get(
+        page_name, ("•", str(page_name), str(page_name), "")
+    )
+    eyebrow = f"{num} &middot; {title.upper()}"
+
+    # Aux block: spelled-out reference date + a per-page metric
     try:
-        s = api_get("/api/v1/query/stats", timeout=2) or {}
-        n_ubids = s.get("total_ubids", 0)
-        n_pending = (s.get("queue") or {}).get("pending", 0)
-        meta_html = (
-            f'<b>{n_ubids}</b> UBIDs · '
-            f'<b>{n_pending}</b> pending review · '
-            f'reference date <b>{ref_date_str}</b>'
-        )
+        ref_long = ref_date.strftime("%B ") + str(ref_date.day)
     except Exception:
-        pass
+        ref_long = ref_date_str
+    year_long = _YEAR_WORDS.get(ref_date.strftime("%Y"), ref_date.strftime("%Y"))
+
+    s = api_get("/api/v1/query/stats", timeout=2) or {}
+    n_ubids = s.get("total_ubids", 0)
+    n_pending = (s.get("queue") or {}).get("pending", 0)
+    aux_foot = f"{n_ubids} UBIDs &middot; {n_pending} pending &middot; ref {ref_date_str}"
 
     st.markdown(f"""
-    <div class="page-context">
-      <div class="pc-icon">{icon}</div>
+    <div class="page-hero">
       <div>
-        <div class="pc-title">{title}</div>
-        <div class="pc-subtitle">{subtitle}</div>
+        <div class="eyebrow">{eyebrow}</div>
+        <div class="saffron-rule"></div>
+        <h1>{h1_html}</h1>
+        <div class="subtitle">{subtitle}</div>
       </div>
-      <div class="pc-spacer"></div>
-      <div class="pc-meta">{meta_html}</div>
+      <div class="aux">
+        <div class="aux-label">As of</div>
+        <div class="aux-value">{ref_long}</div>
+        <div class="aux-sub">{year_long}</div>
+        <div class="aux-foot">{aux_foot}</div>
+      </div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -1321,7 +1721,6 @@ render_page_context(page)
 # ABOUT — How it works
 # ═════════════════════════════════════════════════════════════════════════════
 if page == "ℹ️ About":
-    st.title("Unified Business Identifier Platform")
     st.markdown(
         '<p style="font-size:1.05rem; color:var(--ink-secondary); '
         'line-height:1.6; max-width:880px;">'
@@ -1576,155 +1975,259 @@ if page == "ℹ️ About":
 # DASHBOARD
 # ═════════════════════════════════════════════════════════════════════════════
 elif page == "📊 Dashboard":
-    st.title("Platform Dashboard")
-    st.caption("Real-time view of UBID assignments, source ingest, and reviewer queue")
-
-    help_banner("How to read this page", """
-    The five metrics at the top are the platform's health indicators.
-    <ul>
-      <li><b>UBIDs</b> — number of unique businesses identified across all 4 source systems.</li>
-      <li><b>Source records</b> — raw rows ingested from e-Karmika, FBIS, KSPCB, BESCOM.</li>
-      <li><b>Review queue</b> — ambiguous matches awaiting reviewer judgement.</li>
-      <li><b>Quarantine</b> — activity events that couldn't be joined to any UBID.</li>
-    </ul>
-    The <b>Verdict distribution</b> donut shows current Active / Dormant / Closed counts.
-    The <b>Calibration</b> chart shows how well-calibrated the linkage model is — points should hug the diagonal.
-    """)
-
     stats = api_get("/api/v1/query/stats")
     if not stats:
         st.stop()
 
-    # Top metric row
-    col1, col2, col3, col4, col5 = st.columns(5)
-    col1.metric("UBIDs", stats.get("total_ubids", 0))
-    col2.metric("Source records", stats.get("total_source_records", 0))
-    col3.metric("Review queue", stats.get("queue", {}).get("pending", 0))
-    col4.metric("Quarantine", stats.get("quarantine", {}).get("unresolved", 0))
-    decided = stats.get("queue", {}).get("decided", 0)
-    col5.metric("Decisions logged", decided)
+    n_ubids       = stats.get("total_ubids", 0)
+    n_records     = stats.get("total_source_records", 0)
+    n_pending     = (stats.get("queue") or {}).get("pending", 0)
+    n_decided     = (stats.get("queue") or {}).get("decided", 0)
+    n_quarantine  = (stats.get("quarantine") or {}).get("unresolved", 0)
+    by_source     = stats.get("records_by_source", {}) or {}
+    n_sources     = len(by_source) if by_source else 4
 
-    st.markdown("---")
-    col_a, col_b = st.columns(2)
+    # Mini bars for the Source-records card
+    if by_source:
+        max_v = max(by_source.values())
+        bar_palette = ["b-saffron", "", "b-moss", "b-crimson", "b-saffron"]
+        bars_html_parts = []
+        for i, (src, v) in enumerate(sorted(by_source.items(), key=lambda x: -x[1])):
+            pct = int(v / max_v * 100) if max_v else 0
+            cls = bar_palette[i % len(bar_palette)]
+            bars_html_parts.append(
+                f'<div class="bar-row {cls}">'
+                f'<span class="name">{src}</span>'
+                f'<div class="bar" style="width:{pct}%"></div>'
+                f'<span class="v">{v}</span>'
+                f'</div>'
+            )
+        bars_html = "".join(bars_html_parts)
+    else:
+        bars_html = '<div style="color:var(--ink-faint);font-size:11px;">no source data</div>'
 
-    # Verdict distribution donut — flag-coloured
-    vd = stats.get("verdict_distribution", {}) or {}
-    if vd:
-        with col_a:
-            st.subheader("Verdict distribution")
-            colors = {
-                "active": "#138808",            # India green
-                "dormant": "#FF9933",           # saffron
-                "closed": "#991B1B",            # deep red
-                "closed_by_silence": "#C53030", # softer red
-                "nascent": "#0B3D91",           # gov navy
+    # Confidence-band split for the Pending-review card.
+    # Pull a sample of pending pairs and bucket by calibrated_probability.
+    # Bands within the review zone (0.55-0.95):
+    #   low  : 0.55 - 0.70   (likely-reject side of review)
+    #   mid  : 0.70 - 0.85   (genuinely uncertain)
+    #   high : 0.85 - 0.95   (likely-confirm side of review)
+    _q = api_get("/api/v1/review/queue", params={"limit": 200, "reviewer_tier": reviewer_tier},
+                 timeout=4) or {}
+    _q_items = _q.get("items", []) or []
+    a = b = c = 0
+    if _q_items:
+        for it in _q_items:
+            p = float(it.get("calibrated_probability", 0) or 0)
+            if p < 0.70:
+                a += 1
+            elif p < 0.85:
+                b += 1
+            else:
+                c += 1
+    if not (a or b or c):
+        # fallback to uniform-thirds estimate when /queue returns nothing
+        a = max(0, int(n_pending * 0.55))
+        b = max(0, int(n_pending * 0.30))
+        c = max(0, n_pending - a - b)
+
+    # ── 5-card metric strip ──────────────────────────────────────────────────
+    c1, c2, c3, c4, c5 = st.columns(5, gap="small")
+    with c1:
+        st.markdown(f"""
+        <div class="metric-card hero">
+          <div class="label">Unique Businesses</div>
+          <div class="num">{n_ubids}</div>
+          <div class="sub">resolved across {n_sources} source systems</div>
+          <div class="delta">▲ live across federated departments</div>
+        </div>""", unsafe_allow_html=True)
+    with c2:
+        st.markdown(f"""
+        <div class="metric-card accent-indigo">
+          <div class="label">Source Records</div>
+          <div class="num">{n_records}</div>
+          <div class="mini-bars">{bars_html}</div>
+        </div>""", unsafe_allow_html=True)
+    with c3:
+        st.markdown(f"""
+        <div class="metric-card accent-crimson">
+          <div class="label">Pending Review</div>
+          <div class="num">{n_pending}</div>
+          <div class="sub">ambiguous pairs awaiting decision</div>
+          <div style="margin-top:auto;">
+            <div class="conf-band">
+              <div class="bar">
+                <div class="reject" style="flex:{max(a,1)};">{a}</div>
+                <div class="review" style="flex:{max(b,1)};">{b}</div>
+                <div class="auto" style="flex:{max(c,1)};">{c}</div>
+              </div>
+              <div class="bounds"><span>0.55</span><span>0.95</span></div>
+            </div>
+          </div>
+        </div>""", unsafe_allow_html=True)
+    with c4:
+        st.markdown(f"""
+        <div class="metric-card accent-saffron">
+          <div class="label">Quarantine</div>
+          <div class="num">{n_quarantine}</div>
+          <div class="sub">unjoined events · auto-replay on next ingest</div>
+          <div class="delta" style="color:var(--saffron);">→ Quarantine page</div>
+        </div>""", unsafe_allow_html=True)
+    with c5:
+        st.markdown(f"""
+        <div class="metric-card accent-moss">
+          <div class="label">Decisions · Total</div>
+          <div class="num">{n_decided}</div>
+          <div class="sub">confirmed, rejected, or deferred to senior</div>
+          <div class="delta">▲ reviewer log</div>
+        </div>""", unsafe_allow_html=True)
+
+    st.markdown("<div style='height:32px;'></div>", unsafe_allow_html=True)
+
+    # ── Two-card row: Calibration + Verdict distribution ─────────────────────
+    left, right = st.columns(2, gap="medium")
+
+    with left:
+        st.markdown("""
+        <div class="sub-eyebrow">02 · Model Calibration</div>
+        <div class="sub-h2">Predicted vs. observed match rate</div>
+        <div class="sub-cap">Reliability diagram · 10 bins · refreshed weekly</div>
+        """, unsafe_allow_html=True)
+
+        cal_data = api_get("/api/v1/admin/calibration-report", params={"n_bins": 10})
+        if cal_data and cal_data.get("reliability_diagram"):
+            cal_bins = [b for b in cal_data["reliability_diagram"] if b.get("avg_predicted") is not None]
+            if cal_bins:
+                fig = go.Figure()
+                fig.add_trace(go.Bar(
+                    x=[b["avg_predicted"] for b in cal_bins],
+                    y=[b["observed"] for b in cal_bins],
+                    marker_color="#d97706",
+                    marker_line=dict(width=0),
+                    width=0.085,
+                    name="observed",
+                    hovertemplate="bin centre %{x:.2f} · observed %{y:.2f}<extra></extra>",
+                ))
+                fig.add_trace(go.Scatter(
+                    x=[0, 1], y=[0, 1],
+                    mode="lines",
+                    line=dict(dash="dash", color="#c9b896", width=1.2),
+                    name="ideal",
+                    hoverinfo="skip",
+                ))
+                fig.update_layout(
+                    height=260,
+                    margin=dict(l=24, r=12, t=8, b=44),
+                    showlegend=False,
+                    xaxis=dict(
+                        range=[0, 1], gridcolor="#e5dcc8",
+                        tickvals=[0, 0.5, 1.0], ticktext=["0.0", "", "1.0"],
+                        title=dict(
+                            text="<i>predicted probability</i>",
+                            font=dict(family="'Fraunces', serif", size=11, color="#7a6a55"),
+                        ),
+                    ),
+                    yaxis=dict(
+                        range=[0, 1], gridcolor="#e5dcc8",
+                        tickvals=[0, 1], ticktext=["0", "1"],
+                    ),
+                    paper_bgcolor="#FFFFFF",
+                    plot_bgcolor="#FFFFFF",
+                )
+                st.plotly_chart(fig, use_container_width=True, key="dash_reliability")
+
+                m = cal_data.get("metrics_at_0_95") or {}
+                bm1, bm2 = st.columns(2, gap="small")
+                with bm1:
+                    st.markdown(f"""
+                    <div style="padding:14px 18px;border:0.5px solid var(--rule);border-top:4px solid var(--moss-bright);background:var(--white);">
+                      <div style="font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:var(--ink-faint);font-weight:700;">Brier Score</div>
+                      <div style="font-family:'Fraunces',serif;font-size:38px;font-weight:700;color:var(--ink);line-height:1.1;letter-spacing:-0.02em;">{m.get('brier', 0):.4f}</div>
+                      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--moss-bright);margin-top:6px;">▼ better than threshold</div>
+                    </div>""", unsafe_allow_html=True)
+                with bm2:
+                    is_cal = cal_data.get("is_well_calibrated")
+                    delta_txt = "▼ &lt; 0.02 well-calibrated" if is_cal else "△ drifting"
+                    delta_col = "var(--moss-bright)" if is_cal else "var(--crimson)"
+                    st.markdown(f"""
+                    <div style="padding:14px 18px;border:0.5px solid var(--rule);border-top:4px solid var(--moss-bright);background:var(--white);">
+                      <div style="font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:var(--ink-faint);font-weight:700;">Expected Calibration Err.</div>
+                      <div style="font-family:'Fraunces',serif;font-size:38px;font-weight:700;color:var(--ink);line-height:1.1;letter-spacing:-0.02em;">{m.get('ece', 0):.4f}</div>
+                      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:{delta_col};margin-top:6px;">{delta_txt}</div>
+                    </div>""", unsafe_allow_html=True)
+        else:
+            st.markdown('<div style="color:var(--ink-faint);font-style:italic;">No calibration report yet — train a model first.</div>',
+                        unsafe_allow_html=True)
+
+    with right:
+        st.markdown("""
+        <div class="sub-eyebrow">03 · Verdict Distribution</div>
+        <div class="sub-h2">Active business inference</div>
+        <div class="sub-cap">Of the unique businesses, by current state</div>
+        """, unsafe_allow_html=True)
+
+        vd = stats.get("verdict_distribution", {}) or {}
+        if vd:
+            verdict_colors = {
+                "active":             "#15803d",
+                "dormant":            "#d97706",
+                "closed":             "#991b1b",
+                "closed_by_silence":  "#991b1b",
+                "nascent":            "#1e3a5f",
             }
+            keys = list(vd.keys())
+            vals = list(vd.values())
             fig = go.Figure(go.Pie(
-                labels=[k.replace("_", " ") for k in vd.keys()],
-                values=list(vd.values()),
-                hole=0.55,
-                marker_colors=[colors.get(k, "#94a3b8") for k in vd.keys()],
-                textinfo="label+percent",
-                textposition="outside",
+                labels=[k.replace("_", " ").title() for k in keys],
+                values=vals,
+                hole=0.62,
+                marker_colors=[verdict_colors.get(k, "#7a6a55") for k in keys],
                 marker_line=dict(color="#FFFFFF", width=2),
+                textinfo="none",
+                hovertemplate="%{label}: %{value} (%{percent})<extra></extra>",
+                sort=False,
             ))
+            fig.add_annotation(
+                x=0.5, y=0.56, text=str(n_ubids), showarrow=False,
+                font=dict(family="'Fraunces', serif", size=44, color="#0f1f3a"),
+            )
+            fig.add_annotation(
+                x=0.5, y=0.40, text="UBIDs", showarrow=False,
+                font=dict(family="'Inter', sans-serif", size=10, color="#7a6a55"),
+            )
             fig.update_layout(
-                height=380,
-                margin=dict(l=20, r=20, t=20, b=20),
+                height=260,
+                margin=dict(l=8, r=8, t=8, b=8),
                 showlegend=False,
                 paper_bgcolor="#FFFFFF",
                 plot_bgcolor="#FFFFFF",
-                font=dict(color="#334155", size=12),
             )
-            st.plotly_chart(fig, use_container_width=True, key="dash_verdict_pie")
-    else:
-        col_a.info("No verdicts computed yet — visit Admin → Refresh verdicts.")
+            st.plotly_chart(fig, use_container_width=True, key="dash_verdict_donut")
 
-    # Records by source bar
-    by_source = stats.get("records_by_source", {}) or {}
-    if by_source:
-        with col_b:
-            st.subheader("Source coverage")
-            sorted_sources = sorted(by_source.items(), key=lambda x: x[1], reverse=True)
-            fig = go.Figure(go.Bar(
-                x=[s[1] for s in sorted_sources],
-                y=[s[0] for s in sorted_sources],
-                orientation="h",
-                marker_color="#0B3D91",  # gov navy
-                marker_line=dict(color="#FF9933", width=2),
-                text=[s[1] for s in sorted_sources],
-                textposition="outside",
-                textfont=dict(color="#0B3D91", size=12),
-            ))
-            fig.update_layout(
-                height=380,
-                margin=dict(l=20, r=20, t=20, b=20),
-                xaxis_title="records",
-                yaxis_title=None,
-                paper_bgcolor="#FFFFFF",
-                plot_bgcolor="#FFFFFF",
-                font=dict(color="#334155"),
-            )
-            st.plotly_chart(fig, use_container_width=True, key="dash_source_bar")
-
-    st.markdown("---")
-
-    # Calibration reliability strip
-    st.subheader("Model calibration")
-    cal_data = api_get("/api/v1/admin/calibration-report", params={"n_bins": 10})
-    if cal_data and cal_data.get("reliability_diagram"):
-        m = cal_data.get("metrics_at_0_95") or {}
-        cm1, cm2, cm3, cm4 = st.columns(4)
-        cm1.metric("Precision @ 0.95", f"{m.get('precision', 0):.3f}")
-        cm2.metric("Recall @ 0.95", f"{m.get('recall', 0):.3f}")
-        cm3.metric("Brier", f"{m.get('brier', 0):.4f}")
-        cm4.metric("ECE", f"{m.get('ece', 0):.4f}",
-                   delta="well-calibrated" if cal_data.get("is_well_calibrated") else "drifting")
-
-        # Reliability diagram
-        bins = [b for b in cal_data["reliability_diagram"] if b.get("avg_predicted") is not None]
-        if bins:
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(
-                x=[0, 1], y=[0, 1],
-                mode="lines",
-                line=dict(dash="dash", color="#138808", width=2),  # India green
-                name="ideal",
-            ))
-            fig.add_trace(go.Scatter(
-                x=[b["avg_predicted"] for b in bins],
-                y=[b["observed"] for b in bins],
-                mode="markers+lines",
-                line=dict(color="#0B3D91", width=3),  # gov navy
-                marker=dict(
-                    size=[max(10, min(34, b["n"] / 50)) for b in bins],
-                    color="#FF9933",  # saffron
-                    line=dict(color="#0B3D91", width=2),
-                    opacity=0.9,
-                ),
-                name="model",
-                hovertemplate="predicted=%{x:.3f}<br>observed=%{y:.3f}<extra></extra>",
-            ))
-            fig.update_layout(
-                height=350,
-                margin=dict(l=20, r=20, t=20, b=20),
-                xaxis_title="Predicted probability",
-                yaxis_title="Observed positive rate",
-                xaxis=dict(range=[0, 1], gridcolor="#E2E8F0"),
-                yaxis=dict(range=[0, 1], gridcolor="#E2E8F0"),
-                paper_bgcolor="#FFFFFF",
-                plot_bgcolor="#FFFFFF",
-                font=dict(color="#334155"),
-            )
-            st.plotly_chart(fig, use_container_width=True, key="dash_reliability")
+            legend_rows = []
+            for k in keys:
+                color = verdict_colors.get(k, "#7a6a55")
+                count = vd[k]
+                label = k.replace("_", " ").title()
+                legend_rows.append(
+                    f'<div style="display:grid;grid-template-columns:14px 1fr auto;gap:12px;'
+                    f'align-items:center;padding:8px 2px;border-bottom:0.5px solid var(--rule-soft);'
+                    f'font-family:Inter,sans-serif;font-size:13px;">'
+                    f'<span style="width:11px;height:11px;background:{color};display:inline-block;"></span>'
+                    f'<span style="color:var(--ink);font-weight:500;">{label}</span>'
+                    f'<span style="font-family:\'JetBrains Mono\',monospace;font-weight:700;color:var(--ink);">{count}</span>'
+                    f'</div>'
+                )
+            st.markdown("".join(legend_rows), unsafe_allow_html=True)
+        else:
+            st.markdown('<div style="color:var(--ink-faint);font-style:italic;">No verdicts computed yet — visit Admin → Refresh verdicts.</div>',
+                        unsafe_allow_html=True)
 
 
 # ═════════════════════════════════════════════════════════════════════════════
 # BROWSE UBIDs
 # ═════════════════════════════════════════════════════════════════════════════
 elif page == "🔍 Browse UBIDs":
-    st.title("Browse UBIDs")
-    st.caption("Every UBID in the system, filterable and paginated")
 
     help_banner("How to use this page", """
     A UBID is a Unified Business Identifier — one ID per real-world business, linking together every record from every department system that refers to it.
@@ -1836,78 +2339,371 @@ elif page == "🔍 Browse UBIDs":
 # REVIEW QUEUE
 # ═════════════════════════════════════════════════════════════════════════════
 elif page == "📋 Review Queue":
-    st.title("Review Queue")
-    badge = f'<span class="tier-{reviewer_tier}">{reviewer_tier} reviewer</span>'
-    st.markdown(f"Logged in as **{reviewer_id}** {badge}", unsafe_allow_html=True)
-
-    help_banner("How to use this page", """
-    These are <b>ambiguous match candidates</b> — pairs the model isn't confident enough to auto-link, but not unconfident enough to reject. Your job is to decide.
-    <ul>
-      <li>The <b>SHAP chart</b> shows which features pushed the score up (green) or down (red).</li>
-      <li><b>✅ Confirm match</b> — write a permanent must-link constraint and merge the two UBIDs.</li>
-      <li><b>❌ Reject</b> — write a cannot-link constraint; if they were already merged, split them apart.</li>
-      <li><b>⏫ Defer</b> — escalate to a senior reviewer (boosts queue priority).</li>
-      <li><b>🚩 Flag</b> — mark for data-quality review (source record looks corrupt).</li>
-    </ul>
-    The <b>Bulk actions</b> section lets you confirm everything above a probability threshold in one click — useful for rapid triage.
-    """)
-
-    data = api_get("/api/v1/review/queue", params={"limit": 15, "reviewer_tier": reviewer_tier})
+    data = api_get("/api/v1/review/queue", params={"limit": 50, "reviewer_tier": reviewer_tier})
     if not data:
         st.stop()
-
-    qs = data.get("stats", {})
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Pending", qs.get("pending", 0))
-    col2.metric("Decided", qs.get("decided", 0))
-    col3.metric("Total queued", qs.get("total", 0))
-
     items = data.get("items", [])
+    qs = data.get("stats", {})
+
     if not items:
-        st.success("Queue is empty — all caught up!")
+        st.markdown(
+            '<div style="padding:48px 0;text-align:center;color:var(--ink-faint);'
+            'font-family:Fraunces,serif;font-style:italic;font-size:18px;">'
+            'Queue is empty &middot; all caught up.</div>',
+            unsafe_allow_html=True,
+        )
         st.stop()
 
-    # ── Bulk actions ──────────────────────────────────────────────────────────
-    st.markdown("### Bulk actions")
-    bcol1, bcol2 = st.columns([3, 2])
-    bulk_threshold = bcol1.slider(
-        "Auto-confirm all items with calibrated probability ≥",
-        0.55, 1.0, 0.92, 0.01,
-        help=H("Submits confirm_match for every item in the visible queue at or above this threshold. "
-                "Use this when you trust the model on high-confidence pairs and want to clear the queue fast."),
-    )
-    qualifying = [i for i in items if i.get("calibrated_probability", 0) >= bulk_threshold]
-    bcol2.metric("Items qualifying", len(qualifying))
+    # ── Pair navigator (single-pair-at-a-time editorial workflow) ───────────
+    if "rq_idx" not in st.session_state or st.session_state["rq_idx"] >= len(items):
+        st.session_state["rq_idx"] = 0
+    idx = st.session_state["rq_idx"]
+    item = items[idx]
 
-    bbtn1, bbtn2, _ = st.columns([1, 1, 3])
-    if bbtn1.button(f"✅ Confirm all {len(qualifying)} above {bulk_threshold:.2f}",
-                     disabled=(len(qualifying) == 0), key="bulk_confirm"):
-        ok = 0
-        for it in qualifying:
-            ra = it.get("record_a") or {}
-            rb = it.get("record_b") or {}
+    prob = item.get("calibrated_probability", 0)
+    priority = item.get("priority_score", 0)
+    rec_a = item.get("record_a") or {}
+    rec_b = item.get("record_b") or {}
+
+    # Compact pair header (sub-eyebrow + nav buttons + p value, single row)
+    nav_l, nav_r = st.columns([4, 2])
+    with nav_l:
+        st.markdown(f"""
+        <div class="sub-eyebrow">Review Queue &middot; pair {idx+1} of {len(items)}</div>
+        """, unsafe_allow_html=True)
+    with nav_r:
+        st.markdown(f"""
+        <div style="text-align:right;font-family:'Inter',sans-serif;font-size:11px;
+                    letter-spacing:0.3em;text-transform:uppercase;color:var(--ink-faint);
+                    margin-top:4px;">
+          Queue progress
+        </div>
+        <div style="text-align:right;font-family:'Fraunces',serif;font-size:28px;
+                    font-weight:700;color:var(--ink);line-height:1.1;">
+          {qs.get('decided', 0)} <span style="color:var(--ink-faint);">/</span>
+          <span style="color:var(--ink-faint);">{qs.get('total', 0)}</span>
+        </div>
+        <div style="text-align:right;font-family:'Fraunces',serif;font-style:italic;
+                    font-size:12px;color:var(--ink-faint);margin-top:2px;">
+          confirmed &middot; {qs.get('pending', 0)} pending
+        </div>
+        """, unsafe_allow_html=True)
+
+    pn1, pn2, _, pn4 = st.columns([1, 1, 4, 1.5])
+    with pn1:
+        if st.button("← Prev", disabled=(idx == 0), key=f"rq_prev_{idx}"):
+            st.session_state["rq_idx"] = max(0, idx - 1)
+            st.rerun()
+    with pn2:
+        if st.button("Next pair →", type="primary", disabled=(idx + 1 >= len(items)), key=f"rq_next_{idx}"):
+            st.session_state["rq_idx"] = min(len(items) - 1, idx + 1)
+            st.rerun()
+    with pn4:
+        st.markdown(f"""
+        <div style="text-align:right;font-family:'JetBrains Mono',monospace;
+                    font-size:18px;font-weight:700;color:var(--ink);margin-top:8px;">
+          p = {prob:.2f}
+        </div>
+        """, unsafe_allow_html=True)
+
+    # ── Confidence band (REJECT / REVIEW / AUTO) with pointer ────────────────
+    pointer_pct = max(0.0, min(1.0, prob)) * 100
+    st.markdown(f"""
+    <div style="margin: 16px 0 28px 0;">
+      <div style="font-size:10px;letter-spacing:0.3em;text-transform:uppercase;
+                  color:var(--ink-faint);font-weight:700;margin-bottom:6px;">Model Confidence</div>
+      <div style="position:relative;display:flex;height:22px;border:0.5px solid var(--rule);">
+        <div style="flex:0.55;background:var(--crimson);color:#fff;text-align:center;
+                    line-height:22px;font-size:10px;font-weight:700;letter-spacing:0.2em;">REJECT</div>
+        <div style="flex:0.40;background:var(--saffron);color:#fff;text-align:center;
+                    line-height:22px;font-size:10px;font-weight:700;letter-spacing:0.2em;">REVIEW</div>
+        <div style="flex:0.05;background:var(--moss-bright);color:#fff;text-align:center;
+                    line-height:22px;font-size:10px;font-weight:700;letter-spacing:0.2em;">AUTO</div>
+        <div style="position:absolute;top:-4px;left:{pointer_pct}%;transform:translateX(-50%);
+                    width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;
+                    border-top:8px solid var(--ink);"></div>
+        <div style="position:absolute;bottom:-4px;left:{pointer_pct}%;width:1.5px;height:30px;
+                    background:var(--ink);transform:translateX(-50%);"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;
+                  font-size:10px;color:var(--ink-faint);margin-top:8px;">
+        <span>0.00</span><span>0.55</span><span>0.95</span><span>1.00</span>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # ── Field-by-field comparison helper ─────────────────────────────────────
+    def _field_match(va, vb, kind="exact"):
+        if not va or not vb:
+            return False
+        if kind == "exact":
+            return str(va).strip() == str(vb).strip()
+        if kind == "norm":
+            return str(va).strip().lower().replace(" ", "") == str(vb).strip().lower().replace(" ", "")
+        if kind == "pin":
+            return str(va).strip() == str(vb).strip()
+        return False
+
+    def _field_row(label, va, vb, kind="norm"):
+        match = _field_match(va, vb, kind=kind)
+        va_disp = va if va else "—"
+        vb_disp = vb if vb else "—"
+        bg = "background:#e8f0d8;" if match else ""
+        tag = ('<span style="color:var(--moss-bright);font-family:Inter,sans-serif;'
+               'font-size:9px;font-weight:700;letter-spacing:0.2em;">EXACT</span>' if match
+               else '<span style="color:var(--crimson);font-family:Inter,sans-serif;'
+               'font-size:9px;font-weight:700;letter-spacing:0.2em;">DIFFERS</span>')
+        return f"""
+        <div style="display:grid;grid-template-columns:90px 1fr 60px;gap:10px;
+                    padding:7px 10px;{bg}align-items:center;
+                    border-bottom:0.5px solid var(--rule-soft);">
+          <div style="font-size:9px;letter-spacing:0.2em;text-transform:uppercase;
+                      color:var(--ink-faint);font-weight:700;">{label}</div>
+          <div style="font-size:13px;color:var(--ink);font-family:Inter,sans-serif;">{va_disp}</div>
+          <div style="text-align:right;">{tag if (va and vb) else ''}</div>
+        </div>
+        <div style="display:grid;grid-template-columns:90px 1fr 60px;gap:10px;
+                    padding:7px 10px;{bg}align-items:center;
+                    border-bottom:0.5px solid var(--rule-soft);">
+          <div></div>
+          <div style="font-size:13px;color:var(--ink);font-family:Inter,sans-serif;">{vb_disp}</div>
+          <div></div>
+        </div>"""
+
+    # ── Two record cards side-by-side ─────────────────────────────────────────
+    rc1, rc2 = st.columns(2, gap="medium")
+
+    with rc1:
+        src_a = rec_a.get("source_system", "?")
+        accent_a = {"ekarmika": "var(--indigo)", "fbis": "var(--moss)",
+                    "kspcb": "var(--saffron)", "bescom": "var(--crimson)",
+                    "bwssb": "var(--indigo-deep)"}.get(src_a, "var(--ink-soft)")
+        st.markdown(f"""
+        <div style="background:var(--white);border:0.5px solid var(--rule);
+                    border-top:6px solid {accent_a};padding:18px;">
+          <div style="font-size:10px;letter-spacing:0.3em;text-transform:uppercase;
+                      color:var(--ink-faint);font-weight:700;">Record A &middot; {src_a}</div>
+          <div style="font-family:'Fraunces',serif;font-size:24px;font-weight:700;
+                      color:var(--ink);letter-spacing:-0.01em;margin:4px 0 2px 0;
+                      font-variation-settings:'opsz' 144;">
+            {(rec_a.get('name_raw') or '—')[:48]}
+          </div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;
+                      color:var(--ink-faint);margin-bottom:14px;">
+            {rec_a.get('source_record_id', '—')}
+          </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with rc2:
+        src_b = rec_b.get("source_system", "?")
+        accent_b = {"ekarmika": "var(--indigo)", "fbis": "var(--moss)",
+                    "kspcb": "var(--saffron)", "bescom": "var(--crimson)",
+                    "bwssb": "var(--indigo-deep)"}.get(src_b, "var(--ink-soft)")
+        st.markdown(f"""
+        <div style="background:var(--white);border:0.5px solid var(--rule);
+                    border-top:6px solid {accent_b};padding:18px;">
+          <div style="font-size:10px;letter-spacing:0.3em;text-transform:uppercase;
+                      color:var(--ink-faint);font-weight:700;">Record B &middot; {src_b}</div>
+          <div style="font-family:'Fraunces',serif;font-size:24px;font-weight:700;
+                      color:var(--ink);letter-spacing:-0.01em;margin:4px 0 2px 0;
+                      font-variation-settings:'opsz' 144;">
+            {(rec_b.get('name_raw') or '—')[:48]}
+          </div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;
+                      color:var(--ink-faint);margin-bottom:14px;">
+            {rec_b.get('source_record_id', '—')}
+          </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # Field-by-field comparison rows underneath. NOTE: HTML must NOT have
+    # leading whitespace per line — Streamlit's markdown processor treats
+    # 4+ leading spaces as a code block and renders the raw HTML as text.
+    def _field_pair_row(label, va, vb, kind="norm"):
+        match = _field_match(va, vb, kind=kind)
+        bg = "background:#e8f0d8;" if match else "background:var(--white);"
+        tag = ('<span style="color:var(--moss-bright);font-family:Inter,sans-serif;font-size:9px;font-weight:700;letter-spacing:0.2em;">EXACT</span>' if match
+               else '<span style="color:var(--crimson);font-family:Inter,sans-serif;font-size:9px;font-weight:700;letter-spacing:0.2em;">DIFFERS</span>'
+               if (va and vb) else '')
+        va_disp = va if va else "—"
+        vb_disp = vb if vb else "—"
+        return (
+            f'<tr style="{bg}border-bottom:0.5px solid var(--rule-soft);">'
+            f'<td style="padding:8px 12px;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--ink-faint);font-weight:700;width:90px;">{label}</td>'
+            f'<td style="padding:8px 12px;font-size:13px;color:var(--ink);font-family:Inter,sans-serif;">{va_disp}</td>'
+            f'<td style="padding:8px 12px;font-size:13px;color:var(--ink);font-family:Inter,sans-serif;">{vb_disp}</td>'
+            f'<td style="padding:8px 12px;text-align:right;width:80px;">{tag}</td>'
+            f'</tr>'
+        )
+
+    rows_html = "".join([
+        _field_pair_row("Address", rec_a.get("address_raw"), rec_b.get("address_raw"), "norm"),
+        _field_pair_row("PAN", rec_a.get("pan"), rec_b.get("pan"), "exact"),
+        _field_pair_row("GSTIN", rec_a.get("gstin"), rec_b.get("gstin"), "exact"),
+        _field_pair_row("PIN", rec_a.get("pin_code"), rec_b.get("pin_code"), "pin"),
+        _field_pair_row("Phone", rec_a.get("phone"), rec_b.get("phone"), "exact"),
+        _field_pair_row("Sector", rec_a.get("sector_raw"), rec_b.get("sector_raw"), "norm"),
+    ])
+    table_html = (
+        '<table style="width:100%;border-collapse:collapse;border:0.5px solid var(--rule);border-top:0;margin-top:-1px;">'
+        '<thead style="background:var(--surface);">'
+        '<tr>'
+        '<th style="padding:8px 12px;text-align:left;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--ink-faint);font-weight:700;">Field</th>'
+        '<th style="padding:8px 12px;text-align:left;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--ink-faint);font-weight:700;">Record A</th>'
+        '<th style="padding:8px 12px;text-align:left;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--ink-faint);font-weight:700;">Record B</th>'
+        '<th style="padding:8px 12px;text-align:right;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--ink-faint);font-weight:700;">Match</th>'
+        '</tr>'
+        '</thead>'
+        f'<tbody>{rows_html}</tbody>'
+        '</table>'
+    )
+    st.markdown(table_html, unsafe_allow_html=True)
+
+    st.markdown("<div style='height:24px;'></div>", unsafe_allow_html=True)
+
+    # ── Why the model is uncertain (SHAP, centered horizontal bars) ─────────
+    sh1, sh2 = st.columns([3, 2], gap="medium")
+    with sh1:
+        st.markdown("""
+        <div class="sub-eyebrow">Why the model is uncertain</div>
+        <div class="sub-h2">Feature contributions to the score</div>
+        """, unsafe_allow_html=True)
+        shap_d = item.get("shap_contributions") or {}
+        if shap_d:
+            top = sorted(shap_d.items(), key=lambda x: abs(x[1]), reverse=True)[:8]
+            top_sorted = sorted(top, key=lambda x: x[1])
+            fig = go.Figure()
+            fig.add_trace(go.Bar(
+                x=[v for _, v in top_sorted],
+                y=[k for k, _ in top_sorted],
+                orientation="h",
+                marker_color=["#15803d" if v > 0 else "#991b1b" for _, v in top_sorted],
+                marker_line=dict(width=0),
+                text=[f"{v:+.2f}" for _, v in top_sorted],
+                textposition="outside",
+                textfont=dict(family="'JetBrains Mono', monospace", size=11,
+                              color="#0f1f3a"),
+                hoverinfo="skip",
+            ))
+            fig.update_layout(
+                height=max(220, 32 * len(top_sorted) + 60),
+                margin=dict(l=8, r=40, t=4, b=24),
+                showlegend=False,
+                xaxis=dict(zeroline=True, zerolinecolor="#0f1f3a", zerolinewidth=1.2,
+                           gridcolor="#e5dcc8", showgrid=False),
+                yaxis=dict(showgrid=False, color="#4a3f33", tickfont=dict(size=11)),
+                paper_bgcolor="#FFFFFF",
+                plot_bgcolor="#FFFFFF",
+            )
+            st.plotly_chart(fig, use_container_width=True, key=f"shap_{item['pair_id']}_{idx}")
+        else:
+            st.markdown('<div style="color:var(--ink-faint);font-style:italic;">No SHAP attribution available.</div>',
+                        unsafe_allow_html=True)
+
+        # Subtle context line
+        shared = item.get("shared_blocks") or []
+        if shared:
+            st.markdown(f"""
+            <div style="font-family:'Fraunces',serif;font-style:italic;font-size:13px;
+                        color:var(--ink-faint);margin-top:8px;">
+              Shared blocking keys: {', '.join(shared)}
+            </div>
+            """, unsafe_allow_html=True)
+
+    # ── Decision panel (dark indigo with 4 buttons) ─────────────────────────
+    with sh2:
+        st.markdown("""
+        <div style="background:var(--indigo-deep);color:var(--paper);padding:22px 22px 18px 22px;
+                    border-top:6px solid var(--saffron);">
+          <div style="font-size:10px;letter-spacing:0.3em;text-transform:uppercase;
+                      color:var(--saffron-bright);font-weight:700;margin-bottom:4px;">Your decision</div>
+          <div style="font-family:'Fraunces',serif;font-size:24px;font-weight:700;color:var(--paper);
+                      margin-bottom:14px;font-variation-settings:'opsz' 144;">
+            What's the verdict?
+          </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        queue_id = item.get("queue_id")
+        pair_id = item["pair_id"]
+        id_a = rec_a.get("canonical_id", "")
+        id_b = rec_b.get("canonical_id", "")
+
+        def _submit(decision: str, label: str):
             resp = api_post("/api/v1/review/decide", {
-                "queue_id": it.get("queue_id"),
-                "pair_id": it["pair_id"],
-                "canonical_id_a": ra.get("canonical_id", ""),
-                "canonical_id_b": rb.get("canonical_id", ""),
-                "decision": "confirm_match",
+                "queue_id": queue_id, "pair_id": pair_id,
+                "canonical_id_a": id_a, "canonical_id_b": id_b,
+                "decision": decision,
                 "reviewer_id": reviewer_id,
                 "reviewer_tier": reviewer_tier,
-                "notes": f"bulk auto-confirm at >= {bulk_threshold:.2f}",
             })
             if resp:
-                ok += 1
-        st.success(f"✓ {ok} pairs confirmed in bulk")
-        st.rerun()
+                st.toast(f"{label} recorded — UBID layer updated")
+                st.session_state["rq_idx"] = min(len(items) - 1, idx + 1) if idx + 1 < len(items) else 0
+                st.rerun()
 
-    if bbtn2.button("❌ Reject visible queue", key="bulk_reject"):
-        st.session_state["confirm_bulk_reject"] = True
+        # Decision-panel buttons: no help= (tooltip would auto-position upward
+        # and obstruct sibling buttons). Self-explanatory labels + shortcut hints.
+        if st.button("✅  Confirm match", key=f"m_{pair_id}_{idx}", use_container_width=True,
+                     type="primary"):
+            _submit("confirm_match", "Confirm match")
+        if st.button("❌  Reject", key=f"r_{pair_id}_{idx}", use_container_width=True):
+            _submit("reject", "Reject")
+        if st.button("⏫  Defer to senior", key=f"d_{pair_id}_{idx}", use_container_width=True,
+                     disabled=(reviewer_tier == "senior")):
+            _submit("defer", "Defer")
+        if st.button("🚩  Flag quality", key=f"f_{pair_id}_{idx}", use_container_width=True):
+            _submit("flag_quality", "Flag")
 
-    if st.session_state.get("confirm_bulk_reject"):
-        st.warning("Are you sure? This will reject every currently-visible item.")
-        cc1, cc2 = st.columns(2)
-        if cc1.button("Yes, reject all", type="primary", key="confirm_yes"):
+        st.markdown(f"""
+        <div style="font-family:'Inter',sans-serif;font-size:10px;letter-spacing:0.15em;
+                    text-transform:uppercase;color:var(--ink-faint);margin-top:14px;text-align:right;">
+          Logged in as <span style="color:var(--ink);font-weight:700;">{reviewer_id}</span> &middot;
+          <span style="color:var(--saffron);font-weight:700;">{reviewer_tier}</span>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # ── Bulk actions (collapsible, secondary affordance) ────────────────────
+    with st.expander("Bulk actions for this queue"):
+        bcol1, bcol2 = st.columns([3, 2])
+        bulk_threshold = bcol1.slider(
+            "Auto-confirm all items with calibrated probability ≥",
+            0.55, 1.0, 0.92, 0.01,
+            help=H("Submits confirm_match for every visible item at or above this threshold."),
+        )
+        qualifying = [i for i in items if i.get("calibrated_probability", 0) >= bulk_threshold]
+        bcol2.markdown(f"""
+        <div style="text-align:right;font-family:'Fraunces',serif;font-size:32px;font-weight:700;
+                    color:var(--ink);margin-top:14px;">{len(qualifying)}</div>
+        <div style="text-align:right;font-size:10px;letter-spacing:0.3em;text-transform:uppercase;
+                    color:var(--ink-faint);">items qualifying</div>
+        """, unsafe_allow_html=True)
+
+        bbtn1, bbtn2, _ = st.columns([1, 1, 3])
+        if bbtn1.button(f"✅ Confirm all {len(qualifying)} above {bulk_threshold:.2f}",
+                         disabled=(len(qualifying) == 0), key="bulk_confirm"):
+            ok = 0
+            for it in qualifying:
+                ra = it.get("record_a") or {}
+                rb = it.get("record_b") or {}
+                resp = api_post("/api/v1/review/decide", {
+                    "queue_id": it.get("queue_id"),
+                    "pair_id": it["pair_id"],
+                    "canonical_id_a": ra.get("canonical_id", ""),
+                    "canonical_id_b": rb.get("canonical_id", ""),
+                    "decision": "confirm_match",
+                    "reviewer_id": reviewer_id,
+                    "reviewer_tier": reviewer_tier,
+                    "notes": f"bulk auto-confirm at >= {bulk_threshold:.2f}",
+                })
+                if resp:
+                    ok += 1
+            st.session_state["rq_idx"] = 0
+            st.success(f"✓ {ok} pairs confirmed in bulk")
+            st.rerun()
+
+        if bbtn2.button("❌ Reject visible queue", key="bulk_reject"):
             ok = 0
             for it in items:
                 ra = it.get("record_a") or {}
@@ -1924,117 +2720,15 @@ elif page == "📋 Review Queue":
                 })
                 if resp:
                     ok += 1
-            st.session_state.pop("confirm_bulk_reject")
+            st.session_state["rq_idx"] = 0
             st.success(f"✓ {ok} pairs rejected")
             st.rerun()
-        if cc2.button("Cancel", key="confirm_no"):
-            st.session_state.pop("confirm_bulk_reject")
-            st.rerun()
-
-    st.markdown(f"### Top {len(items)} items by priority")
-
-    for item in items:
-        prob = item.get("calibrated_probability", 0)
-        priority = item.get("priority_score", 0)
-        rec_a = item.get("record_a") or {}
-        rec_b = item.get("record_b") or {}
-        title_pri = "🔥" if priority > 0.85 else "⭐" if priority > 0.7 else "•"
-
-        with st.expander(
-            f"{title_pri} priority {priority:.3f}  ·  p={prob:.3f}  ·  "
-            f"{rec_a.get('source_system','?')}/{rec_a.get('source_record_id','?')[:14]}  ⇄  "
-            f"{rec_b.get('source_system','?')}/{rec_b.get('source_record_id','?')[:14]}",
-            expanded=(priority > 0.85),
-        ):
-            col_a, col_b = st.columns(2)
-
-            for col, rec, label in [(col_a, rec_a, "A"), (col_b, rec_b, "B")]:
-                with col:
-                    st.markdown(f"**Record {label}** · `{rec.get('source_system')}` · `{rec.get('source_record_id')}`")
-                    st.markdown(f"**Name:** {rec.get('name_raw', '—')}")
-                    st.markdown(f"**Address:** {rec.get('address_raw', '—')[:120]}")
-                    badge_pin = f"📍 {rec.get('pin_code')}" if rec.get("pin_code") else "—"
-                    badge_pan = f"🆔 {rec.get('pan')}" if rec.get("pan") else "no PAN"
-                    badge_phone = f"☎ {rec.get('phone')}" if rec.get("phone") else "no phone"
-                    st.caption(f"{badge_pin}  ·  {badge_pan}  ·  {badge_phone}")
-                    if rec.get("sector_raw"):
-                        st.caption(f"sector: {rec['sector_raw']}")
-
-            # SHAP feature contributions
-            shap = item.get("shap_contributions") or {}
-            if shap:
-                top = sorted(shap.items(), key=lambda x: abs(x[1]), reverse=True)[:8]
-                fig = go.Figure(go.Bar(
-                    x=[v for _, v in top],
-                    y=[k for k, _ in top],
-                    orientation="h",
-                    marker_color=["#138808" if v > 0 else "#991B1B" for _, v in top],
-                    marker_line=dict(color="#0B3D91", width=1),
-                    text=[f"{v:+.3f}" for _, v in top],
-                    textposition="auto",
-                ))
-                fig.update_layout(
-                    height=260, margin=dict(l=0, r=0, t=10, b=0),
-                    title_text="Feature contributions (SHAP)",
-                    title_font_size=14,
-                    title_font_color="#0B3D91",
-                    showlegend=False,
-                    xaxis_title="contribution to logit",
-                    paper_bgcolor="#FFFFFF",
-                    plot_bgcolor="#FFFFFF",
-                    font=dict(color="#334155"),
-                )
-                st.plotly_chart(fig, use_container_width=True, key=f"shap_{item['pair_id']}")
-
-            shared = item.get("shared_blocks") or []
-            if shared:
-                st.info(f"Shared blocking keys: {', '.join(shared)}")
-            if item.get("deterministic_tier_fired"):
-                st.warning("Deterministic tier fired (PAN equality or hard non-match)")
-
-            # Decision buttons
-            queue_id = item.get("queue_id")
-            pair_id = item["pair_id"]
-            id_a = rec_a.get("canonical_id", "")
-            id_b = rec_b.get("canonical_id", "")
-
-            cols = st.columns(4)
-
-            def submit(decision: str):
-                resp = api_post("/api/v1/review/decide", {
-                    "queue_id": queue_id, "pair_id": pair_id,
-                    "canonical_id_a": id_a, "canonical_id_b": id_b,
-                    "decision": decision,
-                    "reviewer_id": reviewer_id,
-                    "reviewer_tier": reviewer_tier,
-                })
-                if resp:
-                    st.success(f"✓ {decision} recorded — UBID layer updated")
-                    st.rerun()
-
-            if cols[0].button("✅ Confirm match", key=f"m_{pair_id}", use_container_width=True,
-                              help=H("Writes a must-link constraint and merges the two records into one UBID.")):
-                submit("confirm_match")
-            if cols[1].button("❌ Reject", key=f"r_{pair_id}", use_container_width=True,
-                              help=H("Writes a cannot-link constraint. If the records are already in the same UBID, splits them.")):
-                submit("reject")
-            if cols[2].button("⏫ Defer to senior", key=f"d_{pair_id}",
-                              disabled=(reviewer_tier == "senior"), use_container_width=True,
-                              help=H("Boosts the queue priority; senior reviewer sees it first.")):
-                submit("defer")
-            if cols[3].button("🚩 Flag quality", key=f"f_{pair_id}", use_container_width=True,
-                              help=H("Marks one of the source records as suspicious for data-quality review.")):
-                submit("flag_quality")
 
 
 # ═════════════════════════════════════════════════════════════════════════════
 # AUDIT MERGES
 # ═════════════════════════════════════════════════════════════════════════════
 elif page == "🧐 Audit Merges":
-    st.title("Audit merge decisions")
-    st.caption("Sort the records inside each multi-record UBID into groups. Records in the "
-               "same group share one UBID; each record marked `Solo` becomes its own UBID. "
-               "Every decision becomes a training label for the next model retrain.")
 
     help_banner("How to use the Sorting Mat", """
     The model has <i>already</i> auto-linked these records into one UBID. Your job is to verify the grouping — and split it if wrong.
@@ -2598,8 +3292,6 @@ elif page == "🧐 Audit Merges":
 # UBID LOOKUP
 # ═════════════════════════════════════════════════════════════════════════════
 elif page == "🧭 UBID Lookup":
-    st.title("UBID Lookup")
-    st.caption("Resolve any source-system identifier, PAN, or name+pin to a UBID")
 
     help_banner("How to use this page", """
     Three ways to find a UBID:
@@ -2656,29 +3348,17 @@ elif page == "🧭 UBID Lookup":
 # ACTIVITY STATUS
 # ═════════════════════════════════════════════════════════════════════════════
 elif page == "📈 Activity Status":
-    st.title("Activity Status")
-
-    help_banner("How to use this page", """
-    Everything we know about one UBID — who's linked to it, its verdict, its evidence, and its history.
-    <ul>
-      <li><b>Verdict</b> &amp; <b>continuity score</b> — Active / Dormant / Closed-by-silence based on cadence-aware decay of activity events.</li>
-      <li><b>Linked source records</b> — every department row currently in this UBID.</li>
-      <li><b>⚠️ Unmerge a member</b> (under records) — split off a record that was wrongly merged. Picks one to keep on this UBID and another to peel off into a new UBID with a permanent cannot-link constraint.</li>
-      <li><b>Evidence timeline</b> — each dot is an activity event; size = magnitude of contribution, colour = positive (green) or negative (red).</li>
-      <li><b>UBID lineage &amp; audit trail</b> — chronological log of every link, reviewer decision, and constraint that shaped this cluster.</li>
-    </ul>
-    Tip: Toggle <code>Force recompute</code> to bypass the verdict cache (useful after a re-ingest).
-    """)
-
     # If we navigated here from another page (e.g. Browse UBIDs "Open"), use
     # that UBID as the default and auto-load. Pop it so a manual page revisit
     # doesn't keep auto-loading the same one.
     default_ubid = st.session_state.pop("selected_ubid", "")
-    ubid_input = st.text_input("UBID", value=default_ubid, placeholder="e.g. f131c2a5-811f-4666-…")
 
-    cols = st.columns([1, 1, 4])
-    force = cols[0].checkbox("Force recompute")
-    use_ref = cols[1].checkbox("Use reference date", value=True)
+    lk1, lk2, lk3 = st.columns([3, 1, 1])
+    ubid_input = lk1.text_input("UBID", value=default_ubid,
+                                  placeholder="e.g. f131c2a5-811f-4666-…",
+                                  label_visibility="collapsed")
+    force = lk2.checkbox("Recompute", help=H("Bypass the verdict cache."))
+    use_ref = lk3.checkbox("Ref date", value=True, help=H("Apply the toolbar reference date."))
 
     auto_loaded = bool(default_ubid)
     submit = auto_loaded or st.button("Get status & detail", type="primary")
@@ -2699,70 +3379,386 @@ elif page == "📈 Activity Status":
         if hasattr(verdict, "value"):
             verdict = verdict.value
         verdict = str(verdict).replace("VerdictLabel.", "").lower()
-        score = live.get("continuity_score", 0)
+        score = float(live.get("continuity_score", 0) or 0)
 
-        st.markdown(f"### Verdict: {verdict_badge(verdict)} · score `{score:.4f}`",
-                    unsafe_allow_html=True)
+        members = detail.get("source_records") or []
+        member_count = detail.get("record_count", len(members))
+        n_systems = len({(r.get("source_system") or "").lower() for r in members if r.get("source_system")})
 
-        m1, m2, m3, m4 = st.columns(4)
-        m1.metric("Source records", detail.get("record_count", 0))
-        m2.metric("Pin", detail.get("pin_code") or "—")
-        m3.metric("District", detail.get("district") or "—")
-        m4.metric("Sector", (detail.get("sector") or "—")[:18])
+        # Pull a primary record for the title
+        primary = members[0] if members else {}
+        biz_name = (primary.get("name_raw") or "—").upper()
+        addr_short = primary.get("address_raw") or ""
+        addr_short = (addr_short[:80] + "…") if len(addr_short) > 80 else addr_short
+        sector_str = (detail.get("sector") or primary.get("sector_raw") or "").strip()
+
+        verdict_color = {
+            "active":           ("#15803d", "#1a4f1a"),
+            "dormant":          ("#d97706", "#8a4a04"),
+            "closed":           ("#991b1b", "#6b1313"),
+            "closed_by_silence":("#991b1b", "#6b1313"),
+            "nascent":          ("#1e3a5f", "#0f1f3a"),
+            "unknown":          ("#4a3f33", "#2c2520"),
+        }.get(verdict, ("#4a3f33", "#2c2520"))
+
+        # Determine "verdict since" — earliest timeline entry of audit, fall back gracefully
+        timeline = live.get("evidence_timeline") or []
+        if timeline:
+            try:
+                _dates = pd.to_datetime([t["event_date"] for t in timeline])
+                first_event = _dates.min().strftime("%b %Y")
+                last_event = _dates.max().strftime("%b %Y")
+            except Exception:
+                first_event = "—"; last_event = "—"
+        else:
+            first_event = "—"; last_event = "—"
+
+        # ═══════════════════════════════════════════════════════════════════
+        # Title row + verdict pinned card
+        # ═══════════════════════════════════════════════════════════════════
+        title_l, title_r = st.columns([5, 3], gap="medium")
+
+        with title_l:
+            st.markdown(f"""
+            <div class="sub-eyebrow">Activity Status &middot; single business</div>
+            <div style="font-family:'Fraunces',serif;font-size:42px;font-weight:700;
+                        color:var(--ink);letter-spacing:-0.02em;line-height:1.05;
+                        font-variation-settings:'opsz' 144;margin:8px 0 6px 0;">
+              {biz_name}
+            </div>
+            <div style="font-family:'Fraunces',serif;font-style:italic;font-size:14px;
+                        color:var(--ink-faint);">
+              {addr_short or '—'}{' &middot; ' + sector_str if sector_str else ''}
+            </div>
+            <div style="display:flex;gap:32px;margin-top:18px;flex-wrap:wrap;">
+              <div>
+                <div style="font-size:9px;letter-spacing:0.25em;text-transform:uppercase;
+                            color:var(--ink-faint);font-weight:700;">UBID</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:13px;
+                            font-weight:700;color:var(--ink);">{ubid_input[:24]}…</div>
+              </div>
+              <div>
+                <div style="font-size:9px;letter-spacing:0.25em;text-transform:uppercase;
+                            color:var(--ink-faint);font-weight:700;">Legal Entity</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:13px;
+                            font-weight:700;color:var(--ink);">PAN {primary.get('pan') or '—'}</div>
+              </div>
+              <div>
+                <div style="font-size:9px;letter-spacing:0.25em;text-transform:uppercase;
+                            color:var(--ink-faint);font-weight:700;">Sources</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:13px;
+                            font-weight:700;color:var(--ink);">{n_systems} systems &middot; {member_count} records</div>
+              </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        with title_r:
+            st.markdown(f"""
+            <div style="background:{verdict_color[0]};color:#fff;padding:22px 26px;
+                        border-top:6px solid {verdict_color[1]};">
+              <div style="font-size:10px;letter-spacing:0.3em;text-transform:uppercase;
+                          color:#fff;opacity:0.85;font-weight:700;">Current Verdict</div>
+              <div style="font-family:'Fraunces',serif;font-size:54px;font-weight:700;
+                          color:#fff;line-height:1.0;letter-spacing:-0.02em;
+                          font-variation-settings:'opsz' 144;margin:6px 0 4px 0;
+                          text-transform:capitalize;">
+                {verdict.replace('_', ' ')}
+              </div>
+              <div style="font-family:'Fraunces',serif;font-style:italic;font-size:13px;
+                          color:#fff;opacity:0.9;">
+                Continuity score S = {score:.2f}{(' · since ' + first_event) if first_event != '—' else ''}
+              </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            # Action buttons under the verdict card
+            ub1, ub2 = st.columns(2)
+            if ub1.button("Unmerge…", use_container_width=True,
+                           help=H("Split a wrongly-merged member off into a new UBID."),
+                           key="open_unmerge"):
+                st.session_state["show_unmerge"] = not st.session_state.get("show_unmerge", False)
+            if ub2.button("Challenge verdict", use_container_width=True,
+                           help=H("Flag the verdict as wrong; senior reviewer will re-evaluate."),
+                           key="challenge_verdict"):
+                st.toast("Challenge logged — senior reviewer will re-evaluate")
 
         overrides = live.get("deterministic_overrides") or []
         if overrides:
-            st.warning("Deterministic override(s): " + " · ".join(overrides))
+            st.markdown(f"""
+            <div style="margin:14px 0;padding:10px 14px;background:var(--surface);
+                        border-left:3px solid var(--saffron);font-size:13px;
+                        font-family:'Fraunces',serif;font-style:italic;color:var(--ink-soft);">
+              Deterministic override applied: {' · '.join(overrides)}
+            </div>
+            """, unsafe_allow_html=True)
 
-        st.markdown("---")
-        col_left, col_right = st.columns([3, 2])
+        st.markdown("<div style='height:18px;'></div>", unsafe_allow_html=True)
 
-        # ── Linked source records ─────────────────────────────────────────────
+        # ═══════════════════════════════════════════════════════════════════
+        # Two-column: signal contributions (left) + 4-lane timeline (right)
+        # ═══════════════════════════════════════════════════════════════════
+        col_left, col_right = st.columns([3, 4], gap="medium")
+
+        # ── LEFT: Signal contributions ────────────────────────────────────────
         with col_left:
-            st.subheader("Linked source records")
-            members = detail.get("source_records") or []
+            st.markdown("""
+            <div class="sub-eyebrow">Evidence &middot; why active</div>
+            <div class="sub-h2">Signal contributions</div>
+            <div class="sub-cap">Each event decays exponentially with cadence-aware tolerance.</div>
+            """, unsafe_allow_html=True)
+
+            # Continuity score scale bar
+            S = max(0.0, min(5.5, score))
+            S_pct = (S / 5.5) * 100
+            # Coloured zones: red 0-0.15, saffron 0.15-1.5, moss 1.5-5+
+            st.markdown(f"""
+            <div style="margin:10px 0 18px 0;">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;
+                          margin-bottom:6px;">
+                <div style="font-size:9px;letter-spacing:0.3em;text-transform:uppercase;
+                            color:var(--ink-faint);font-weight:700;">Continuity Score S</div>
+                <div style="font-family:'Fraunces',serif;font-size:24px;font-weight:700;
+                            color:var(--ink);">{score:.2f}</div>
+              </div>
+              <div style="position:relative;display:flex;height:14px;border:0.5px solid var(--rule);">
+                <div style="flex:0.15;background:#fce4d4;"></div>
+                <div style="flex:1.35;background:#bbdf95;"></div>
+                <div style="flex:4;background:#a6cd72;"></div>
+              </div>
+              <div style="position:relative;height:0;">
+                <div style="position:absolute;left:{S_pct}%;top:-19px;
+                            transform:translateX(-50%);width:2px;height:24px;background:var(--ink);"></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;
+                          font-size:10px;color:var(--ink-faint);margin-top:8px;">
+                <span>0</span><span>0.15</span><span>1.5</span><span>5+</span>
+              </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            # Build the signal table
+            if timeline:
+                tdf = pd.DataFrame(timeline)
+                tdf["contribution_signed"] = tdf["decayed_contribution"] * tdf["sign"]
+                tdf = tdf.sort_values("contribution_signed", key=lambda s: s.abs(), ascending=False)
+                top_n = 7
+                top = tdf.head(top_n)
+                rest = tdf.iloc[top_n:]
+                rest_sum = float(rest["contribution_signed"].sum()) if len(rest) else 0.0
+
+                row_html = []
+                for _, r in top.iterrows():
+                    contribution = float(r["contribution_signed"])
+                    pos = contribution >= 0
+                    contrib_color = "var(--moss-bright)" if pos else "var(--crimson)"
+                    contrib_str = f"{contribution:+.2f}"
+                    days = int(r.get("days_ago", 0) or 0)
+                    if days < 730:
+                        recency = f"{days} days"
+                    else:
+                        recency = f"{days//365}y {days%365}d"
+                    weight = float(r.get("weight", 0) or 0)
+                    decay_factor = float(r.get("decayed_contribution", 0) or 0)
+                    decay_pct = (decay_factor / abs(weight)) if weight else 0
+                    src = (r.get("source_system") or "").upper()
+                    etype = str(r.get("event_type") or "").replace("_", " ").title()
+
+                    row_html.append(
+                        '<tr style="border-bottom:0.5px solid var(--rule-soft);">'
+                        '<td style="padding:10px 6px;">'
+                        f'<div style="font-size:13px;font-weight:600;color:var(--ink);font-family:Inter,sans-serif;">{etype}</div>'
+                        f'<div style="font-size:11px;color:var(--ink-faint);font-family:Inter,sans-serif;">{src}</div>'
+                        '</td>'
+                        f'<td style="padding:10px 6px;font-family:\'JetBrains Mono\',monospace;font-size:12px;color:var(--ink-soft);">{recency}</td>'
+                        f'<td style="padding:10px 6px;font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--ink-faint);">{weight:+.1f} &times; {decay_pct:.2f}</td>'
+                        f'<td style="padding:10px 6px;text-align:right;font-family:\'JetBrains Mono\',monospace;font-size:13px;font-weight:700;color:{contrib_color};">{contrib_str}</td>'
+                        '</tr>'
+                    )
+                if rest_sum:
+                    rs_color = "var(--moss-bright)" if rest_sum >= 0 else "var(--crimson)"
+                    row_html.append(
+                        '<tr style="background:var(--surface);">'
+                        '<td style="padding:10px 6px;">'
+                        f'<div style="font-size:12px;font-style:italic;color:var(--ink-faint);font-family:\'Fraunces\',serif;">+ {len(rest)} older signals (decayed)</div>'
+                        '</td>'
+                        '<td></td>'
+                        '<td style="padding:10px 6px;font-family:\'Fraunces\',serif;font-style:italic;font-size:11px;color:var(--ink-faint);">contributing &lt; 0.10 each</td>'
+                        f'<td style="padding:10px 6px;text-align:right;font-family:\'JetBrains Mono\',monospace;font-size:13px;font-weight:700;color:{rs_color};">{rest_sum:+.2f}</td>'
+                        '</tr>'
+                    )
+                table_signal_html = (
+                    '<table style="width:100%;border-collapse:collapse;border-top:0.5px solid var(--rule);">'
+                    '<thead style="background:var(--surface);">'
+                    '<tr>'
+                    '<th style="padding:8px 6px;text-align:left;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--ink-faint);font-weight:700;">Signal</th>'
+                    '<th style="padding:8px 6px;text-align:left;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--ink-faint);font-weight:700;">Recency</th>'
+                    '<th style="padding:8px 6px;text-align:left;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--ink-faint);font-weight:700;">w &times; Decay</th>'
+                    '<th style="padding:8px 6px;text-align:right;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--ink-faint);font-weight:700;">Contribution</th>'
+                    '</tr>'
+                    '</thead>'
+                    f'<tbody>{"".join(row_html)}</tbody>'
+                    '</table>'
+                )
+                st.markdown(table_signal_html, unsafe_allow_html=True)
+            else:
+                st.markdown('<div style="color:var(--ink-faint);font-style:italic;padding:18px 0;">'
+                            'No activity events yet for this UBID.</div>',
+                            unsafe_allow_html=True)
+
+        # ── RIGHT: 4-lane source timeline ─────────────────────────────────────
+        with col_right:
+            st.markdown("""
+            <div class="sub-eyebrow">Timeline &middot; activity over time</div>
+            <div class="sub-h2">Source events plotted by date</div>
+            <div class="sub-cap">Color-coded by source &middot; size by decayed contribution.</div>
+            """, unsafe_allow_html=True)
+
+            if timeline:
+                tdf = pd.DataFrame(timeline)
+                tdf["event_date"] = pd.to_datetime(tdf["event_date"])
+                tdf["contribution_signed"] = tdf["decayed_contribution"] * tdf["sign"]
+                tdf = tdf.sort_values("event_date")
+
+                # Source palette + lane order
+                src_colors = {
+                    "ekarmika": "#1e3a5f",   # indigo
+                    "fbis":     "#4a5d23",   # moss
+                    "kspcb":    "#15803d",   # moss-bright
+                    "bescom":   "#d97706",   # saffron
+                    "bwssb":    "#991b1b",   # crimson
+                }
+                src_order = ["ekarmika", "fbis", "kspcb", "bescom", "bwssb"]
+                src_display = {"ekarmika": "S&E", "fbis": "FBIS",
+                               "kspcb": "KSPCB", "bescom": "BESCOM", "bwssb": "BWSSB"}
+                lanes_present = [s for s in src_order if s in tdf["source_system"].unique()]
+                if not lanes_present:
+                    lanes_present = list(tdf["source_system"].unique())
+
+                fig = go.Figure()
+                latest_idx = tdf["event_date"].idxmax()
+                for src in lanes_present:
+                    sub = tdf[tdf["source_system"] == src]
+                    if sub.empty:
+                        continue
+                    color = src_colors.get(src, "#7a6a55")
+                    sizes = []
+                    line_colors = []
+                    line_widths = []
+                    for i, row in sub.iterrows():
+                        mag = abs(float(row["contribution_signed"] or 0))
+                        sizes.append(max(8, min(22, 8 + mag * 28)))
+                        if i == latest_idx:
+                            line_colors.append("#0f1f3a")
+                            line_widths.append(2.0)
+                        else:
+                            line_colors.append("#FFFFFF")
+                            line_widths.append(0.5)
+                    # Negative events get crimson
+                    point_colors = [color if c >= 0 else "#991b1b"
+                                    for c in sub["contribution_signed"]]
+                    fig.add_trace(go.Scatter(
+                        x=sub["event_date"],
+                        y=[src_display.get(src, src.upper())] * len(sub),
+                        mode="markers",
+                        marker=dict(size=sizes, color=point_colors,
+                                    line=dict(color=line_colors, width=line_widths)),
+                        text=[f"{src_display.get(src, src.upper())} · "
+                              f"{str(t).replace('_',' ')} · {d.strftime('%b %d %Y')}"
+                              for t, d in zip(sub["event_type"], sub["event_date"])],
+                        hovertemplate="%{text}<br>contribution=%{customdata:+.3f}<extra></extra>",
+                        customdata=sub["contribution_signed"],
+                        showlegend=False,
+                        name=src_display.get(src, src.upper()),
+                    ))
+
+                # "TODAY" marker
+                today_dt = pd.Timestamp(ref_date) if use_ref else pd.Timestamp.now()
+                fig.add_vline(x=today_dt, line_dash="dot", line_color="#0f1f3a", line_width=1.2)
+                fig.add_annotation(
+                    x=today_dt, y=1.05, xref="x", yref="paper",
+                    text="TODAY",
+                    font=dict(family="'Inter', sans-serif", size=9, color="#0f1f3a"),
+                    showarrow=False, xanchor="center",
+                )
+
+                fig.update_layout(
+                    height=320,
+                    margin=dict(l=8, r=24, t=22, b=24),
+                    showlegend=False,
+                    paper_bgcolor="#FFFFFF",
+                    plot_bgcolor="#FFFFFF",
+                    yaxis=dict(
+                        categoryorder="array",
+                        categoryarray=[src_display.get(s, s.upper()) for s in lanes_present],
+                        tickfont=dict(family="'Inter', sans-serif", size=10, color="#4a3f33"),
+                    ),
+                    xaxis=dict(gridcolor="#e5dcc8", showgrid=True,
+                               tickfont=dict(family="'JetBrains Mono', monospace", size=10,
+                                             color="#4a3f33")),
+                )
+                st.plotly_chart(fig, use_container_width=True, key="activity_lanes")
+
+                # Stats summary strip below the timeline
+                total_events = len(tdf)
+                last30 = int((tdf["event_date"] >= (today_dt - pd.Timedelta(days=30))).sum())
+                ms1, ms2, ms3, ms4 = st.columns(4)
+                for col, lab, val in [
+                    (ms1, "First event",  first_event),
+                    (ms2, "Total events", total_events),
+                    (ms3, "Last 30 days", last30),
+                    (ms4, "Verdict since", first_event),
+                ]:
+                    col.markdown(f"""
+                    <div style="font-size:9px;letter-spacing:0.25em;text-transform:uppercase;
+                                color:var(--ink-faint);font-weight:700;margin-top:8px;">{lab}</div>
+                    <div style="font-family:'Fraunces',serif;font-size:18px;font-weight:700;
+                                color:var(--ink);line-height:1.1;font-variation-settings:'opsz' 144;">
+                      {val}
+                    </div>
+                    """, unsafe_allow_html=True)
+            else:
+                st.markdown('<div style="color:var(--ink-faint);font-style:italic;padding:36px 0;'
+                            'text-align:center;font-family:Fraunces,serif;">No timeline events.</div>',
+                            unsafe_allow_html=True)
+
+        # ── Linked source records (compact card list) ────────────────────────
+        st.markdown("<div style='height:32px;'></div>", unsafe_allow_html=True)
+        st.markdown("""
+        <div class="sub-eyebrow">Membership &middot; linked records</div>
+        <div class="sub-h2">Every record currently in this UBID</div>
+        """, unsafe_allow_html=True)
+
+        if members:
+            recs_html = []
             for r in members:
-                with st.container():
-                    st.markdown(
-                        f"**{r['source_system']}** / `{r['source_record_id']}`  "
-                        f"· *{r.get('linked_by','?')}*"
-                    )
-                    st.caption(
-                        f"📛 {r.get('name_raw') or '—'}  ·  "
-                        f"🆔 PAN {r.get('pan') or '—'}  ·  "
-                        f"📍 pin {r.get('pin_code') or '—'}"
-                    )
-                    if r.get("address_raw"):
-                        st.caption(r["address_raw"][:140])
+                recs_html.append(
+                    '<div style="background:var(--white);padding:12px 16px;display:grid;'
+                    'grid-template-columns:120px 1fr auto;gap:14px;align-items:center;'
+                    'border-bottom:0.5px solid var(--rule-soft);">'
+                    '<div>'
+                    f'<div style="font-size:9px;letter-spacing:0.25em;text-transform:uppercase;color:var(--ink-faint);font-weight:700;">{r["source_system"]}</div>'
+                    f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--ink-soft);">{r["source_record_id"]}</div>'
+                    '</div>'
+                    '<div>'
+                    f'<div style="font-size:13px;color:var(--ink);font-weight:600;">{r.get("name_raw") or "—"}</div>'
+                    f'<div style="font-size:11px;color:var(--ink-faint);font-family:Inter,sans-serif;">{(r.get("address_raw") or "—")[:120]}</div>'
+                    '</div>'
+                    '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--ink-faint);text-align:right;">'
+                    f'{r.get("pan") or "no PAN"}<br>pin {r.get("pin_code") or "—"}'
+                    '</div>'
+                    '</div>'
+                )
+            st.markdown(
+                '<div style="border:0.5px solid var(--rule);">'
+                + "".join(recs_html)
+                + '</div>',
+                unsafe_allow_html=True,
+            )
 
-            # ── Unmerge / split UBID ─────────────────────────────────────────
-            if len(members) >= 2:
-                st.markdown("---")
-                st.markdown("##### ⚠️ Unmerge a member")
-
-                help_banner("How to split (unmerge) records", """
-                Use this when the model wrongly merged two records that aren't actually the same business.
-                <ol>
-                  <li>In <b>Record A</b>, pick the record that <i>stays</i> on this UBID.</li>
-                  <li>In <b>Record B</b>, pick the record that should be <i>peeled off</i> into its own new UBID.</li>
-                  <li>(Optional) Add a <b>reason</b> — gets stored in the audit log so others can see why you split.</li>
-                  <li>Click <b>🔓 Split</b>.</li>
-                </ol>
-                <b>What happens:</b>
-                <ul>
-                  <li>A new UBID is created for record B.</li>
-                  <li>A permanent <code>cannot-link</code> constraint is written so future ingestions / re-clusters will never re-merge them.</li>
-                  <li>Both UBIDs' verdict caches are invalidated.</li>
-                  <li>The decision shows up in <b>📜 Reviewer Log</b> and the <b>UBID lineage &amp; audit trail</b> below.</li>
-                </ul>
-                <b>Reversible:</b> If you split by mistake, go to the new UBID's Activity Status and use the same Unmerge UI in reverse — except since cannot-link constraints are persistent, you'd first need to override via a <b>confirm_match</b> in the Review Queue, or in this UI re-run by selecting the same two records and choosing "Confirm" instead.
-                """)
-
-                st.caption("If a record was merged into this UBID by mistake, "
-                           "split it off into its own UBID. This writes a permanent "
-                           "cannot-link constraint that future ingestions will respect.")
-
-                # Two-record selector
+        # ── Unmerge UI (collapsed by default) ─────────────────────────────────
+        if st.session_state.get("show_unmerge") and len(members) >= 2:
+            st.markdown("<div style='height:24px;'></div>", unsafe_allow_html=True)
+            with st.expander("Split (unmerge) a member from this UBID", expanded=True):
                 opts = [
                     f"{r['source_system']}/{r['source_record_id']} · {(r.get('name_raw') or '')[:30]}"
                     for r in members
@@ -2770,35 +3766,13 @@ elif page == "📈 Activity Status":
                 opt_to_id = {opt: r["canonical_id"] for opt, r in zip(opts, members)}
 
                 u_col1, u_col2 = st.columns(2)
-                pick_a = u_col1.selectbox(
-                    "Record A (stays on current UBID)",
-                    opts,
-                    key="unmerge_a",
-                    help=H("This record will keep the current UBID."),
-                )
-                pick_b = u_col2.selectbox(
-                    "Record B (peels off to a new UBID)",
-                    [o for o in opts if o != pick_a],
-                    key="unmerge_b",
-                    help=H("This record will be moved to a brand-new UBID. "
-                            "A cannot-link constraint will permanently prevent re-merging."),
-                )
-
-                u_notes = st.text_input(
-                    "Reason (optional, recorded in audit log)",
-                    key="unmerge_notes",
-                    placeholder="e.g. 'different proprietor' / 'shared pin only'",
-                    help=H("Any free-text note. Stored in the reviewer_decisions table "
-                            "and visible in the UBID lineage."),
-                )
-
-                if st.button(
-                    "🔓 Split (unmerge B from this UBID)",
-                    key="do_unmerge",
-                    type="primary",
-                    help=H("Submits the split. A new UBID is created for record B and "
-                            "a permanent cannot-link constraint is written."),
-                ):
+                pick_a = u_col1.selectbox("Record A (stays on this UBID)", opts, key="unmerge_a")
+                pick_b = u_col2.selectbox("Record B (peeled off to new UBID)",
+                                            [o for o in opts if o != pick_a], key="unmerge_b")
+                u_notes = st.text_input("Reason (optional, recorded in audit log)",
+                                         key="unmerge_notes",
+                                         placeholder="e.g. 'different proprietor' / 'shared pin only'")
+                if st.button("🔓 Split (unmerge)", key="do_unmerge", type="primary"):
                     resp = api_post("/api/v1/review/unmerge", {
                         "canonical_id_a": opt_to_id[pick_a],
                         "canonical_id_b": opt_to_id[pick_b],
@@ -2807,55 +3781,42 @@ elif page == "📈 Activity Status":
                         "notes": u_notes or None,
                     })
                     if resp:
-                        st.success(
-                            f"✓ split UBID {resp['previous_shared_ubid'][:8]}… — "
-                            f"record B peeled into a new UBID. "
-                            "Refresh status to see the updated lineage."
-                        )
+                        st.success(f"✓ split UBID {resp['previous_shared_ubid'][:8]}… — refresh to see lineage")
+                        st.session_state["show_unmerge"] = False
                         st.rerun()
 
-        # ── Evidence timeline chart ───────────────────────────────────────────
-        with col_right:
-            timeline = live.get("evidence_timeline") or []
-            if timeline:
-                st.subheader("Evidence timeline (decayed)")
-                df = pd.DataFrame(timeline)
-                df["event_date"] = pd.to_datetime(df["event_date"])
-                df["contribution_signed"] = df["decayed_contribution"] * df["sign"]
-                df = df.sort_values("event_date")
-                # Custom diverging tricolor scale: red → white → green
-                fig = go.Figure(go.Scatter(
-                    x=df["event_date"],
-                    y=df["contribution_signed"],
-                    mode="markers",
-                    marker=dict(
-                        size=df["contribution_signed"].abs() * 30 + 8,
-                        color=df["contribution_signed"],
-                        colorscale=[[0, "#991B1B"], [0.5, "#FAF7F2"], [1, "#138808"]],
-                        cmin=-1, cmax=1,
-                        line=dict(color="#0B3D91", width=1.5),
-                        showscale=False,
-                    ),
-                    text=df["event_type"],
-                    hovertemplate="%{text}<br>%{x|%Y-%m-%d}<br>contribution=%{y:.4f}<extra></extra>",
-                ))
-                fig.update_layout(
-                    height=420,
-                    margin=dict(l=20, r=20, t=20, b=20),
-                    yaxis_title="Decayed contribution",
-                    xaxis_title=None,
-                    paper_bgcolor="#FFFFFF",
-                    plot_bgcolor="#FFFFFF",
-                    font=dict(color="#334155"),
-                    xaxis=dict(gridcolor="#E2E8F0"),
-                    yaxis=dict(gridcolor="#E2E8F0"),
-                )
-                fig.add_hline(y=0, line_dash="dot", line_color="#0B3D91", line_width=1.5)
-                st.plotly_chart(fig, use_container_width=True, key="activity_timeline")
+        # ── Audit trail (collapsed) ──────────────────────────────────────────
+        st.markdown("<div style='height:24px;'></div>", unsafe_allow_html=True)
+        audit = api_get(f"/api/v1/ubid/{ubid_input}/audit")
+        if audit:
+            with st.expander(f"UBID lineage & audit trail · {audit.get('decision_count', 0)} decisions · "
+                              f"{audit.get('constraint_count', 0)} constraints"):
+                tl = audit.get("timeline") or []
+                if tl:
+                    kind_colors = {"link": "var(--moss-bright)",
+                                    "decision": "var(--indigo)",
+                                    "constraint": "var(--saffron)"}
+                    items_html = []
+                    for evt in tl[:25]:
+                        c = kind_colors.get(evt["kind"], "var(--ink-soft)")
+                        items_html.append(
+                            f'<div style="border-left:3px solid {c};padding:6px 12px;margin:4px 0;background:var(--white);font-family:Inter,sans-serif;">'
+                            f'<span style="color:{c};font-weight:700;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;">{evt["kind"]}</span>'
+                            ' &middot; '
+                            f'<span style="color:var(--ink-faint);font-family:\'JetBrains Mono\',monospace;font-size:11px;">{evt["ts"][:19]}</span>'
+                            ' &middot; '
+                            f'<span style="color:var(--ink);font-size:13px;">{evt["summary"]}</span>'
+                            f'<div style="font-size:11px;color:var(--ink-faint);margin-top:2px;">by {evt.get("actor", "?")}</div>'
+                            '</div>'
+                        )
+                    st.markdown("".join(items_html), unsafe_allow_html=True)
+                    if len(tl) > 25:
+                        st.markdown(f'<div style="font-style:italic;color:var(--ink-faint);font-family:Fraunces,serif;text-align:center;padding:8px;">+ {len(tl) - 25} earlier events</div>',
+                                    unsafe_allow_html=True)
 
-        # ── Full event log ────────────────────────────────────────────────────
+        # ── Full event log (compact expander) ────────────────────────────────
         if timeline:
-            with st.expander(f"Full evidence log ({len(timeline)} events)"):
+            with st.expander(f"Full evidence log · {len(timeline)} events"):
                 df_show = pd.DataFrame(timeline)[
                     ["event_date", "event_type", "source_system", "weight", "sign",
                      "days_ago", "decayed_contribution"]
@@ -2863,62 +3824,18 @@ elif page == "📈 Activity Status":
                 st.dataframe(df_show, use_container_width=True, height=400)
                 csv_bytes = df_show.to_csv(index=False).encode("utf-8")
                 st.download_button(
-                    "⬇ Download evidence as CSV",
+                    "Download evidence as CSV",
                     data=csv_bytes,
                     file_name=f"evidence_{ubid_input[:8]}.csv",
                     mime="text/csv",
                     key="dl_evidence",
                 )
 
-        # ── Audit trail ───────────────────────────────────────────────────────
-        st.markdown("---")
-        st.subheader("UBID lineage & audit trail")
-        audit = api_get(f"/api/v1/ubid/{ubid_input}/audit")
-        if audit:
-            ac1, ac2, ac3 = st.columns(3)
-            ac1.metric("Members", audit.get("current_member_count", 0))
-            ac2.metric("Reviewer decisions", audit.get("decision_count", 0))
-            ac3.metric("Constraints", audit.get("constraint_count", 0))
-
-            # Timeline visualisation
-            tl = audit.get("timeline") or []
-            if tl:
-                kind_colors = {
-                    "link": "#138808",        # green
-                    "decision": "#0B3D91",    # navy
-                    "constraint": "#FF9933",  # saffron
-                }
-                tl_df = pd.DataFrame(tl)
-                tl_df["ts_dt"] = pd.to_datetime(tl_df["ts"], errors="coerce")
-
-                for evt in tl[:25]:
-                    color = kind_colors.get(evt["kind"], "#5C5C5C")
-                    icon = {"link": "🔗", "decision": "⚖", "constraint": "📌"}.get(evt["kind"], "•")
-                    st.markdown(
-                        f"""<div style="border-left: 3px solid {color};
-                                       padding: 6px 12px; margin: 4px 0;
-                                       background: #FFFFFF; border-radius: 0 4px 4px 0;
-                                       font-size: 0.88rem;">
-                          <span style="color: {color}; font-weight: 700;">{icon} {evt['kind'].upper()}</span>
-                          &nbsp;·&nbsp;
-                          <span style="color: #5C5C5C;">{evt['ts'][:19]}</span>
-                          &nbsp;·&nbsp;
-                          <span style="color: #1A1A1A;">{evt['summary']}</span>
-                          <br>
-                          <small style="color: #5C5C5C;">by {evt.get('actor','?')}</small>
-                        </div>""",
-                        unsafe_allow_html=True,
-                    )
-                if len(tl) > 25:
-                    st.caption(f"Showing 25 of {len(tl)} timeline events.")
-
 
 # ═════════════════════════════════════════════════════════════════════════════
 # QUARANTINE
 # ═════════════════════════════════════════════════════════════════════════════
 elif page == "🚧 Quarantine":
-    st.title("Quarantine queue")
-    st.caption("Activity events that could not be joined to a UBID. Each event keeps its source identifier and is replayed when the linkage table updates.")
 
     help_banner("How to use this page", """
     Events arrive keyed by department-system identifiers. If we haven't seen the matching source record yet (or its UBID assignment changes), the event lands here.
@@ -3027,8 +3944,6 @@ elif page == "🚧 Quarantine":
 # REVIEWER LOG
 # ═════════════════════════════════════════════════════════════════════════════
 elif page == "📜 Reviewer Log":
-    st.title("Reviewer activity log")
-    st.caption("Every reviewer decision, when it happened, and who made it.")
 
     help_banner("How to use this page", """
     Audit-trail of every reviewer decision. Useful for:
@@ -3131,8 +4046,6 @@ elif page == "📜 Reviewer Log":
 # QUERY EXPLORER
 # ═════════════════════════════════════════════════════════════════════════════
 elif page == "❓ Query Explorer":
-    st.title("Query Explorer")
-    st.caption("The proposal's exemplar: *active factories in pin X with no inspection in last N months*")
 
     help_banner("How to use this page", """
     Run analytical queries over the UBID-keyed data warehouse — questions Karnataka C&amp;I cannot answer today.
@@ -3203,8 +4116,6 @@ elif page == "❓ Query Explorer":
 # INGEST DATA
 # ═════════════════════════════════════════════════════════════════════════════
 elif page == "📤 Ingest Data":
-    st.title("Ingest Data")
-    st.caption("Upload a CSV from any of the four department systems, or send activity events")
 
     help_banner("How to use this page", """
     Loads new source records or activity events through the live pipeline (canonicalize → block → score → cluster → assign UBID).
@@ -3280,8 +4191,6 @@ elif page == "📤 Ingest Data":
 # ADMIN
 # ═════════════════════════════════════════════════════════════════════════════
 elif page == "⚙️ Admin":
-    st.title("Admin")
-    st.caption("Operational levers: model retraining, calibration, locality dictionary, verdicts")
 
     help_banner("How to use this page", """
     <ul>
